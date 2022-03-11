@@ -17,7 +17,9 @@ public class User {
     private String password;
     private String salt;
     private String email;
+    // 0-普通，1-管理员，2-版主
     private Integer type;
+    // 0-没有激活，1-激活。
     private Integer status;
     private String activationCode;
     private String headerUrl;
