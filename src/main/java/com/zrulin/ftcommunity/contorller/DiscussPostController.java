@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * 展示帖子信息的controller
  * @author zrulin
  * @create 2022-03-09 19:13
  */
@@ -30,6 +31,12 @@ public class DiscussPostController {
     @Autowired
     private UserServiceImpl userService;
 
+    /**
+     * 将帖子表中的信息按照默认或者规定的分页，展示出去。
+     * @param model
+     * @param page
+     * @return
+     */
     @GetMapping("/index")
     public String getIndexPage(Model model, Page page){
         //调用方法栈前，SpringMVC会自动实例化Model和Page，并将Page注入Model

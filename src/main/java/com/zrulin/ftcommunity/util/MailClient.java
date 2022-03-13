@@ -13,6 +13,7 @@ import javax.mail.internet.MimeMessage;
 
 
 /**
+ * 发送邮件的util
  * @author zrulin
  * @create 2022-03-10 20:36
  */
@@ -23,6 +24,7 @@ public class MailClient {
     @Autowired
     private JavaMailSender mailSender;
 
+    //设置发送方
     @Value("${spring.mail.username}")
     private String from;
 

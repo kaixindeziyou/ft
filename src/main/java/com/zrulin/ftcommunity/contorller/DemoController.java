@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 /**
+ * session 和 cookie的测试controller
  * @author zrulin
  * @create 2022-03-11 15:38
  */

@@ -1,6 +1,8 @@
 package com.zrulin.ftcommunity.service.impl;
 
+import com.zrulin.ftcommunity.dao.LoginTicketMapper;
 import com.zrulin.ftcommunity.dao.UserMapper;
+import com.zrulin.ftcommunity.pojo.LoginTicket;
 import com.zrulin.ftcommunity.pojo.User;
 import com.zrulin.ftcommunity.service.UserService;
 import com.zrulin.ftcommunity.util.CommunityConstant;
@@ -31,6 +33,9 @@ public class UserServiceImpl implements UserService, CommunityConstant {
 
     @Autowired
     private TemplateEngine templateEngine;
+
+    @Autowired
+    private LoginTicketMapper ticketMapper;
 
     //发邮件要包含激活码，激活码要包含域名和项目名。
     @Value("${community.path.domain}")
@@ -111,5 +116,84 @@ public class UserServiceImpl implements UserService, CommunityConstant {
         }else{
             return ACTIVATION_FAILURE;
         }
+    }
+
+    @Override
+    public Map<String, Object> login(String username, String password, Integer expiredSeconds) {
+        Map<String, Object> result = new HashMap<>();
+
+        //空值处理
+        if(StringUtils.isBlank(username)){
+            result.put("usernameMsg","用户名不能为空");
+            return result;
+        }
+        if(StringUtils.isBlank(password)){
+            result.put("passwordMsg","密码不能为空");
+            return result;
+        }
+
+        //验证账号
+        User user = userMapper.selectByUsername(username);
+        if(user == null){
+            result.put("usernameMsg","该账号不存在");
+            return result;
+        }
+        //验证状态
+        if(user.getStatus() == 0){
+            result.put("usernameMsg","该账号未激活");
+            return result;
+        }
+        //验证密码
+        password = CommunityUtil.md5(user.getSalt()+password);
+        if(!user.getPassword().equals(password)){
+            result.put("passwordMsg","密码错误");
+            return result;
+        }
+        //生成登录凭证,秒换成毫秒所以*1000，date里面存的是过期时间。
+        LoginTicket ticket = new LoginTicket(null, user.getId(), CommunityUtil.generateUUID(), 0, new Date(System.currentTimeMillis() + expiredSeconds * 1000));
+        ticketMapper.insertTicket(ticket);
+        System.out.println(ticket.getExpired());
+        result.put("ticket",ticket.getTicket());
+        return result;
+    }
+
+
+    @Override
+    public void logout(String ticket) {
+        ticketMapper.updateStatus(ticket,1);
+    }
+
+    @Override
+    public LoginTicket findLoginTicket(String ticket) {
+        return ticketMapper.selectByTicket(ticket);
+    }
+
+    @Override
+    public int updateHeaderUrl(Integer userId, String url) {
+        return userMapper.updateHeader(userId,url);
+    }
+
+    @Override
+    public Map<String,Object> updatePassword(User user, String password, String oldPassword) {
+        Map<String,Object> result = new HashMap<>();
+        // 空值处理
+        if(StringUtils.isBlank(oldPassword)){
+            result.put("oldPasswordMsg","原密码不能为空");
+            return result;
+        }
+        if(StringUtils.isBlank(password)){
+            result.put("passwordMsg","密码不能为空");
+            return result;
+        }
+        //判断oldPassword 是否正确
+        oldPassword = CommunityUtil.md5(user.getSalt()+oldPassword);
+        if(!user.getPassword().equals(oldPassword)){
+            result.put("oldPasswordMsg","原始密码输入错误");
+            return result;
+        }
+        //加密新密码
+        password = CommunityUtil.md5(user.getSalt()+password);
+        userMapper.updatePassword(user.getId(),password);
+        return result;
     }
 }

@@ -151,3 +151,438 @@
 
   - ![image-20220311154648495](img/image-20220311154648495.png) 
 
+## 生成验证码
+
+用现成的工具。
+
+- Kaptcha
+
+  - 导入jar包
+
+  - ```XML
+            <!-- https://mvnrepository.com/artifact/com.github.penggle/kaptcha -->
+            <dependency>
+                <groupId>com.github.penggle</groupId>
+                <artifactId>kaptcha</artifactId>
+                <version>2.3.2</version>
+            </dependency>
+    ```
+
+  - 编写kaptcha配置类
+
+    - springboot没有针对他做整合，没有给他做自动配置，我们需要自己对它做一些配置，我们可以写一些配置类，配置好以后，把这个配置类加载到Spring容器里，Spring容器可以对它做一个初始化。
+
+    - ```java
+      @Configuration
+      public class KaptchaConfig {
+          //这个Bean将会被Spring容器所管理，所装配，我们要装配的肯定是这个工具的核心的代码，对象。
+          //Kaptcha核心的对象是一个接口，Producer
+          @Bean
+          public Producer kaptchaProducer(){
+              Properties properties = new Properties();
+              properties.setProperty("kaptcha.image.width","100");//单位是像素。
+              properties.setProperty("kaptcha.image.hight","40");//单位是像素。
+              properties.setProperty("kaptcha.textproducer.font.size","32");//字号大小。
+              properties.setProperty("kaptcha.textproducer.font.color","0,0,0");//0,0,0表示黑色，直接写单词也可以。
+              properties.setProperty("kaptcha.textproducer.char.string","0123456789ABCDEFGHIJKLNMOPQRSTUVWXYZ");//随机字母的范围
+              properties.setProperty("kaptcha.textproducer.char.length","4");//随机字母的长度限定
+              //要采用哪个干扰类，干扰类的作用就是图片上的点，线，阴影等干扰元素。默认干扰就做的很好所以。
+              properties.setProperty("kaptcha.noise.impl","com.google.code.kaptcha.impl.NoNoise");
+      
+      
+              //DefaultKaptcha 是Producer接口默认的实现类。
+              DefaultKaptcha defaultKaptcha = new DefaultKaptcha();
+              //传入配置，参数，到一个Config对象里面。
+              Config config = new Config(properties);
+              defaultKaptcha.setConfig(config);
+              return defaultKaptcha;
+          }
+      }
+      ```
+
+  - 生成随机字符，图片。
+
+    - ```java
+       /**
+           * 生成验证码
+           * @param session
+           * @param response
+           */
+          @GetMapping("/kaptcha")
+          public void getKaptcha(HttpSession session, HttpServletResponse response){
+              //生成验证码
+              String text = kaptchaProduce.createText();
+              //生成图片
+              BufferedImage image = kaptchaProduce.createImage(text);
+        
+              //验证码存入session，好在后面的请求中验证验证码是否正确
+              session.setAttribute("code",text);
+              //将图片输出给浏览器，人工的输出。
+              response.setContentType("image/png");//声明浏览器返回什么样的数据
+        
+              try {
+                  //获取response的输出流，这个输出流整个由springMVC维护管理
+                  ServletOutputStream outputStream = response.getOutputStream();
+                  //向浏览器输出图片的工具。(图片，格式，使用的输出流)
+                  ImageIO.write(image,"png",outputStream);
+              } catch (IOException e) {
+                  logger.error("响应验证码失败："+e.getMessage());
+              }
+          }
+      ```
+
+  - 附代一个html中的code代码编写，单击事件更换验证码
+
+    - ```html
+      <img id="code_img" th:src="@{/kaptcha}" style="width:100px;height:40px;" class="mr-2"/>
+      ```
+
+    - ```js
+      $(function () {
+      			$("#code_img").click(function () {
+      				//在事件响应的function函数中有一个this对象，这个this对象，是当前正在响应时间的Dom对象。
+      				//src属性表示验证码img标签的 图片路径，他可读，可写。
+      				this.src = CONTEXT_PATH+"/kaptcha?d="+Math.random();
+      			});
+      		});
+      ```
+
+## 显示登录信息
+
+- 拦截器示例
+
+  - 定义拦截器，实现HandlerInterceptor
+
+    - ```java
+      @Component
+      public class DemoInterceptor implements HandlerInterceptor {
+          //首先声明@Component 交给Spring容器去管理
+          //实现HandlerInterceptor，拦截器的接口
+          //接口里面有preHandle，postHandle，afterCompletion，三种方法，但是都是default类型的，默认实现的，所以想实现哪个就实现哪个就好。
+          // Ogject handler 是拦截的目标 比如说拦截路径 /login  那这个就是/login对应的方法。
+      
+          private static final Logger logger = LoggerFactory.getLogger(DemoInterceptor.class);
+      
+          //在Controller之前执行。
+          @Override
+          public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+              logger.debug("preHandle："+ handler.toString());
+              //如果return false  方法就不会往下执行，Cotroller就不会被执行。
+              return true;
+          }
+      
+          //在调用完Controller之后执行的
+          @Override
+          public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
+              logger.debug("postHandle:"+handler.toString());
+          }
+      
+          //在模板引擎（TemplateEngine）执行之后执行
+          @Override
+          public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+              logger.debug("afterCompletion:"+handler.toString());
+          }
+      }
+      ```
+
+  - 配置拦截器，为它指定拦截排除的路径
+
+    - ```java
+      @Configuration
+      public class WebConfig implements WebMvcConfigurer {
+          @Autowired
+          private DemoInterceptor demoInterceptor;
+      
+          @Override
+          public void addInterceptors(InterceptorRegistry registry) {
+              //添加拦截器，如果不做配置的话就会拦截一切请求
+              // 路径 /**/*.css   第一个/指的时访问路径，http://localhost:8888/工程路径/
+              // 也可以理解/**指的是static下面的所有文件。
+              //excludePathPatterns() 不拦截的路径
+              //addPathPatterns 拦截的路径。
+              registry.addInterceptor(demoInterceptor)
+                      .excludePathPatterns("/**/*.css","/**/*.js","/**/*.png","/**/*.jpg","/**/*.jpeg")
+                      .addPathPatterns("/register","/login");
+          }
+      }
+      ```
+
+- 拦截器应用
+
+  - ![image-20220313091834941](img/image-20220313091834941.png) 
+
+  - 在请求开始时，查询登录用户
+
+  - 在本次请求中持有用户数据。
+
+  - 在模板视图上显示用户数据。
+
+  - 在请求结束时清理用户数据。
+
+  - 登录信息拦截器实现：
+
+    - ```java
+      @Component
+      public class LoginInterceptor implements HandlerInterceptor {
+          @Autowired
+          private UserServiceImpl userService;
+          @Autowired
+          private HostHolder hostHolder;
+          @Override
+          public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+              String ticket = CookieUtil.getValue(request, "ticket");
+              if(ticket != null){
+                  //查询凭证
+                  LoginTicket loginTicket = userService.findLoginTicket(ticket);
+                  //检查凭证是否有效
+                  if(loginTicket != null && loginTicket.getStatus() == 0 && loginTicket.getExpired().after(new Date())){
+                      //根据凭证查询用户
+                      User user = userService.findUserById(loginTicket.getUserId());
+                      //在本次请求中持有用户。考虑这个持有的时候要考虑到多线程的情况，每个请求对应一个线程，每个线程单独存一份，不会互相干扰。
+                      hostHolder.setUser(user);
+                  }
+              }
+              return true;
+          }
+      
+          @Override
+          public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
+              User user = hostHolder.getUser();
+              if(user != null || modelAndView != null){
+                  modelAndView.addObject("loginUser",user);
+              }
+          }
+      
+          @Override
+          public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+              hostHolder.clear();
+          }
+      }
+      ```
+
+  - 持有用户，线程隔离实现：
+
+    - ```java
+      /**
+       * 持有用户的信息，用于代替session对象的。如果是session的话，可以直接持有用户信息，并且是线程隔离的。
+       * 这个是用这个类，体验隔离的实现。
+       * @author zrulin
+       * @create 2022-03-13 9:35
+       */
+      @Component
+      public class HostHolder {
+          private ThreadLocal<User> users = new ThreadLocal<>();
+          /**ThreadLocal源码解析
+           * set()方法，存值
+           *     public void set(T value) {
+           *         Thread t = Thread.currentThread();  获取当前线程。
+           *         ThreadLocalMap map = getMap(t);    根据当前线程去获取一个map对象
+           *         if (map != null)                   然后把值存到线程里面。
+           *             map.set(this, value);          存是通过线程来存的，每个线程得到的map对象不一样。
+           *         else
+           *             createMap(t, value);
+           *     }
+           *
+           * get()方法：取值
+           *  public T get() {
+           *         Thread t = Thread.currentThread();               获取当前线程
+           *         ThreadLocalMap map = getMap(t);                  通过当前线程获取一个map对象。
+           *         if (map != null) {                               然后再取值
+           *             ThreadLocalMap.Entry e = map.getEntry(this);
+           *             if (e != null) {
+           *                 @SuppressWarnings("unchecked")
+           *                 T result = (T)e.value;
+           *                 return result;
+           *             }
+           *         }
+           *         return setInitialValue();
+           *     }
+           */
+      
+          public void setUser(User user){
+              users.set(user);
+          }
+          public User getUser(){
+              return users.get();
+          }
+          public void clear(){
+              users.remove();
+          }
+      }
+      ```
+
+  - 将拦截器配置到Configuration
+
+    - ```java
+      @Configuration
+      public class WebConfig implements WebMvcConfigurer {
+          @Autowired
+          private DemoInterceptor demoInterceptor;
+      
+          @Autowired
+          private LoginInterceptor loginInterceptor;
+      
+          @Override
+          public void addInterceptors(InterceptorRegistry registry) {
+              //添加拦截器，如果不做配置的话就会拦截一切请求
+              // 路径 /**/*.css   第一个/指的时访问路径，http://localhost:8888/工程路径/
+              // 也可以理解/**指的是static下面的所有文件。
+              //excludePathPatterns() 不拦截的路径
+              //addPathPatterns 拦截的路径。
+              registry.addInterceptor(demoInterceptor)
+                      .excludePathPatterns("/**/*.css","/**/*.js","/**/*.png","/**/*.jpg","/**/*.jpeg")
+                      .addPathPatterns("/register","/login");
+      
+              registry.addInterceptor(loginInterceptor)
+                      .excludePathPatterns("/**/*.css","/**/*.js","/**/*.png","/**/*.jpg","/**/*.jpeg");
+          }
+      }
+      ```
+
+  - html部分判断是否登录的代码：
+
+    - ```html
+      <li class="nav-item ml-3 btn-group-vertical">
+         <a class="nav-link" th:href="@{/index}">首页</a>
+      </li>
+      <li class="nav-item ml-3 btn-group-vertical" th:if="${loginUser!=null}">
+         <a class="nav-link position-relative" href="site/letter.html">消息<span class="badge badge-danger">12</span></a>
+      </li>
+      <li class="nav-item ml-3 btn-group-vertical" th:if="${loginUser==null}">
+         <a class="nav-link" th:href="@{/register}">注册</a>
+      </li>
+      <li class="nav-item ml-3 btn-group-vertical" th:if="${loginUser==null}">
+         <a class="nav-link" th:href="@{/login}">登录</a>
+      </li>
+      <li class="nav-item ml-3 btn-group-vertical dropdown" th:if="${loginUser!=null}">
+         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <img th:src="@{${loginUser.headerUrl}}" class="rounded-circle" style="width:30px;"/>
+         </a>
+         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <a class="dropdown-item text-center" href="site/profile.html">个人主页</a>
+            <a class="dropdown-item text-center" href="site/setting.html">账号设置</a>
+            <a class="dropdown-item text-center" th:href="@{/logout}">退出登录</a>
+            <div class="dropdown-divider"></div>
+            <span class="dropdown-item text-center text-secondary" th:utext="${loginUser.username}">nowcoder</span>
+         </div>
+      </li>
+      ```
+
+
+
+## 账号设置
+
+- 上传文件
+
+  - 上传头像
+
+  - ```java
+        @Value("${community.path.upload}")
+        private String photoPath;
+    
+        @Value("${community.path.domain}")
+        private String domain;
+    
+        @Value("${server.servlet.context-path}")
+        private String contextPath;
+    ```
+
+  - ```xml
+    community.path.upload=e:/ideaProjects1/FTCommunity/src/main/resources/static/image/userphoto
+    server.servlet.context-path=/ft
+    community.path.domain=http://localhost:8080
+    ```
+
+  - 将头像存储路径和访问的域名以及工程路径都写在配置文件中便于迁移。
+
+  - 下面是上传头像时的controller
+
+    - ```java
+       @PostMapping("/headerImage")
+          public String updateHeaderUrl(MultipartFile headImage, Model model){
+              if(headImage == null){
+                  model.addAttribute("error","您还没有选择图片");
+                  return"site/setting";
+              }
+              //获取图片的名字
+              String filename = headImage.getOriginalFilename();
+              //获取图片的后缀
+              String suffix = filename.substring(filename.lastIndexOf("."));
+              if(StringUtils.isBlank(suffix)){
+                  model.addAttribute("error","文件的格式不正确");
+                  return"site/setting";
+              }
+              //生成随机文件名
+              filename = CommunityUtil.generateUUID() + suffix;
+              //确定文件存放的位置
+              File dest = new File(photoPath+"/"+filename);
+              try {
+                  //存储文件
+                  headImage.transferTo(dest);
+              } catch (IOException e) {
+                  logger.error("上传文件失败："+e.getMessage());
+                  throw new RuntimeException("上传文件失败，服务器发生异常",e);
+              }
+              //更新当前用户的头像路径。（web访问路径）
+              //http://localhost:8080/工程路径/
+              User user = hostHolder.getUser();
+              String headerUrl = domain + contextPath + "/user/header/"+filename;
+              userService.updateHeaderUrl(user.getId(),headerUrl);
+              return "redirect:/index";
+          }
+      ```
+
+    - 下面时访问头像时的controller
+
+    - ```java
+          @GetMapping("/header/{filename}")
+          public void getHeader(@PathVariable("filename") String filename,
+                                HttpServletResponse response){
+              //服务器存取路径
+              filename = photoPath +"/"+ filename;
+              //获取图片类型
+              String type = filename.substring(filename.lastIndexOf("."));
+              response.setContentType("image/"+type);
+              try (   //读取文件得到输入流
+                      ServletOutputStream outputStream = response.getOutputStream();
+                      //得到输出流
+                      FileInputStream fileInputStream = new FileInputStream(filename);
+                      ){
+                  //，输出的时候不要一个一个字节的输出，要建立一个缓冲区，比如一次输出1024个字节，一批一批输出，效率高一点
+                  byte[] buffer = new byte[1024];
+                  int b = 0; //建立游标,不等于-1就是读到数据，等于就是没读到
+                  while((b = fileInputStream.read(buffer)) != -1){
+                      outputStream.write(buffer,0,b);
+                  }
+              } catch (IOException e) {
+                 logger.error("读取头像失败："+e.getMessage());
+              }
+          }
+      ```
+
+  - 下面时上传文件的配置
+
+    - ```xml
+      # multipart
+      # 文件上传属性配置
+      # 单个文件上传最大大小
+      spring.servlet.multipart.max-file-size=10MB
+      # 整个上传的文静请求不超过100MB
+      spring.servlet.multipart.max-request-size=100MB
+      ```
+
+
+
+## 自定义注解
+
+- 常用元注解
+  - @Target
+    - 用来声明我自定义的注解可以写在哪个位置，可以作用在哪些类型上。
+  - @Retention
+    - 用来声明自定义注解保存的时间，有效时间，你是编译时有效，还是运行时有效。
+  - @Document
+    - 用来声明自定义注解在生成文档的时候，要不要把这个注解带上去。
+  - @Inherited
+    - 用于继承，一个子类继承父类， 父类上有这个自定义注解，子类要不要把这个注解也继承下来。
+- 通过反射，在程序运行的时候读取到这个注解。
+
