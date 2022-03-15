@@ -25,4 +25,18 @@ public interface DiscussPostService {
      * @return
      */
     public int findDiscussPostRows(int userId);
+
+    /**
+     * 增加帖子
+     * @param post
+     * @return
+     */
+    public int addDiscussPost(DiscussPost post);
+
+    /**
+     * 查找帖子详细信息
+     * @param id
+     * @return
+     */
+    public DiscussPost findPostDetail(int id);
 }

@@ -1,3 +1,5 @@
+
+
 # FTCommunity
 
 ## 发送邮件
@@ -151,7 +153,7 @@
 
   - ![image-20220311154648495](img/image-20220311154648495.png) 
 
-## 生成验证码
+## 验证码工具
 
 用现成的工具。
 
@@ -247,7 +249,7 @@
       		});
       ```
 
-## 显示登录信息
+## 拦截登录信息
 
 - 拦截器示例
 
@@ -470,7 +472,7 @@
 
 
 
-## 账号设置
+## 文件的上传配置
 
 - 上传文件
 
@@ -585,4 +587,271 @@
   - @Inherited
     - 用于继承，一个子类继承父类， 父类上有这个自定义注解，子类要不要把这个注解也继承下来。
 - 通过反射，在程序运行的时候读取到这个注解。
+
+配置自定义注解：
+
+```java
+/**
+ * @author zrulin
+ * @create 2022-03-13 17:55
+ */
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface LoginRequired {
+
+}
+```
+
+在需要拦截的路径上面加上这个我的自定义注解，
+
+然后配置拦截器：
+
+```java
+@Component
+public class LoginRequireInterceptor implements HandlerInterceptor {
+    @Autowired
+    private HostHolder hostHolder;
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        if(handler instanceof HandlerMethod){
+            HandlerMethod handlerMethod = (HandlerMethod) handler;
+            Method method = handlerMethod.getMethod();
+            LoginRequired annotation = method.getAnnotation(LoginRequired.class);
+            if(annotation != null && hostHolder.getUser() == null){
+                response.sendRedirect(request.getContextPath()+"/login");
+                return false;
+            }
+        }
+        return true;
+    }
+}
+```
+
+然后将拦截器加入配置中
+
+## 过滤敏感词
+
+- 前缀树
+  - 名称：Trie,字典树，查找树
+  - 特点：查找效率高，消耗内存大。
+  - 应用：字符串检索，瓷瓶统计，字符串排序等
+    - 前缀树的根节点不包含任何字符。
+    - 除了根节点以外的节点只包含一个字符
+    - 从根节点到某一个节点，经过的路径上每个节点的字符连接起来，对应的字符串。
+    - ![image-20220314083819256](img/image-20220314083819256.png) 
+- 铭感词过滤器
+  - 定义前缀树：关键代码：
+  
+    - ```java
+      //定义一个内部类，作为前缀树的结构
+      private static class TrieNode{
+          //关键词结束的标识
+          private boolean isKeyWordEnd = false;
+          //子节点(key 代表下级的节点字符， value是下级节点)
+          private Map<Character, TrieNode> subNode = new HashMap<>();
+      
+          public boolean isKeyWordEnd() {
+              return isKeyWordEnd;
+          }
+      
+          public void setKeyWordEnd(boolean keyWordEnd) {
+              isKeyWordEnd = keyWordEnd;
+          }
+      
+          //添加子节点
+          public void addSubNode(Character key,TrieNode subNode){
+              this.subNode.put(key,subNode);
+          }
+          //获取子节点
+          public TrieNode getSubNode(Character key){
+              return subNode.get(key);
+          }
+      }
+      ```
+  
+  - 根据敏感词，初始化前缀树。
+  
+    - 这里把铭感词写入了.txt的文件所以读取铭感词需要从磁盘中读：(关键代码)
+  
+    - ```java
+      // @PostConstruct 表明这是一个初始化方法，在类被实例化的时候就执行。
+      @PostConstruct
+      public void init(){
+          // 获取类加载器，类加载器是从类路径下，去加载资源，所谓的类路径就是target/classes/目录之下。
+          // 我们的程序一编译，所有的程序都编译到classes下，包括配置文件。
+          try(
+                  //得到字节流
+                  InputStream is = this.getClass().getClassLoader().getResourceAsStream("sensitive-words.txt");
+                  //从字节流中读文字不太方便，把字节流转成字符流，把字符流改成缓冲流会效率更高
+                  BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+          ){
+              String keyword;  //用这个keyword去读数据
+              while((keyword = reader.readLine()) != null){//一行一行的读
+                  //添加到前缀树
+                  this.addKeyWord(keyword);
+              }
+          }catch (IOException e){
+              logger.error("获取铭感词文件失败："+e.getMessage());
+          }
+      }
+      //把一个敏感词添加到前缀树中去。
+      public void addKeyWord(String keyword){
+          TrieNode tempNode = rootNode;
+          for(int i = 0 ; i< keyword.length() ; ++i){
+              char key = keyword.charAt(i);
+              //找子节点
+              TrieNode subNode = tempNode.getSubNode(key);
+              if(subNode == null){//如果没有这个子节点
+                  //初始化子节点；
+                  subNode = new TrieNode();
+                  tempNode.addSubNode(key,subNode);
+              }
+              //指向子节点，进入下一次循环
+              tempNode = subNode;
+              if(i == keyword.length() -1){
+                  tempNode.setKeyWordEnd(true);
+              }
+          }
+      }
+      ```
+  
+      
+  
+  - 编写过滤铭感词的方法。用三个指针来完成：
+  
+    - （关键代码）
+  
+    - ```java
+      /**
+           * 过滤敏感词
+           * @param text 待过滤的文本
+           * @return    过滤后的文本
+           */
+          public String filter(String text){
+              if(StringUtils.isBlank(text)){
+                  return null;
+              }
+              //指针1 ，指向树
+              TrieNode tempNode = rootNode;
+              //指针2 指向字符串的慢指针，一直往前走
+              int begin = 0;
+              //指针3 指向字符串的快指针，往后走检查，如果不是就归位。
+              int position = 0;
+              //结果
+              StringBuilder result = new StringBuilder();
+              while(position < text.length()){
+                  char c = text.charAt(position);
+                  //跳过符号
+                  if(isSymbol(c)){
+                      //若指针处于根节点。则将此符号计入结果，让指针向下走一步。
+                      if(tempNode == rootNode){
+                          result.append(c);
+                          begin++;
+                      }
+                      //无论结构在开头或中间指针3都向下走一步。
+                      position++;
+                      continue;
+                  }
+                  tempNode = tempNode.getSubNode(c);
+                  if(tempNode == null){
+      //                以begin为开头的字符串不存在敏感词
+                      result.append(text.charAt(begin));
+                      //进入下一个位置
+                      position = ++begin;
+                      // 重新指向根节点。
+                      tempNode  = rootNode;
+                  }else if(tempNode.isKeyWordEnd()){
+                      //发现了敏感词,将begin-posttion中的字符串替换
+                      result.append(REPLACEMENT);
+      //                进入下一个位置。
+                      begin = ++ position;
+                      tempNode = rootNode;
+                  }else{
+                      //检查下一个字符
+                      position++;
+                  }
+              }
+              //将最后一批字符计入结构
+              result.append(text.substring(begin));
+              return result.toString();
+          }
+      
+          //判断是否为符号,是的话返回true，不是的话返回false
+          public boolean isSymbol(Character c){
+              //!CharUtils.isAsciiAlphanumeric(c)判断合法字符
+              //c < 0x2E80 || c > 0x9fff 东亚文字的范围是0x2E80到0x9fff
+              return !CharUtils.isAsciiAlphanumeric(c) && (c < 0x2E80 || c > 0x9fff);
+          }
+      ```
+
+## 异步请求Ajax
+
+- Asynchronous JavaScript and XML
+- 异步的JavaScript和XML，不是一门新技术，只是一个新的术语。
+- 使用Ajax，网页能够将增量更新呈现在页面上，而不需要刷新整个页面。
+- 虽然X代表XML，但目前JSON的使用比XML更加普遍
+
+在项目中使用fastjson的jar包来处理json数据。
+
+```xml
+<!-- https://mvnrepository.com/artifact/com.alibaba/fastjson -->
+<dependency>
+    <groupId>com.alibaba</groupId>
+    <artifactId>fastjson</artifactId>
+    <version>1.2.75</version>
+</dependency>
+```
+
+封装返回json对象方法：
+
+```java
+/**
+ * 获取返回的json对象
+ * @param code  状态编码
+ * @param msg   提示信息
+ * @param map   业务数据
+ * @return
+ */
+public static String getJsonString(int code, String msg, Map<String,Object> map){
+    JSONObject json = new JSONObject();
+    json.put("code",code);
+    json.put("msg",msg);
+    if(map != null){
+        for(String key : map.keySet()){
+            json.put(key,map.get(key));
+        }
+    }
+    return json.toJSONString();
+}
+public static String getJsonString(int code, String msg){
+   return getJsonString(code,msg,null);
+}
+public static String getJsonString(int code){
+   return getJsonString(code,null,null);
+}
+```
+
+```js
+//部分js代码:
+//发送异步请求
+$.post(
+   CONTEXT_PATH+"/discuss/add",
+   {"title":title,"content":content},
+   function(data){
+      data = $.parseJSON(data);
+      //在提示框中显示返回消息
+      $("#hintBody").text(data.msg);
+      //显示提示框
+      $("#hintModal").modal("show");
+      //2秒后，自动隐藏提示框
+      setTimeout(function(){
+         $("#hintModal").modal("hide");
+         //刷新页面
+         if(data.code == 200){
+            window.location.reload();
+         }
+      }, 2000);
+   }
+);
+```
 

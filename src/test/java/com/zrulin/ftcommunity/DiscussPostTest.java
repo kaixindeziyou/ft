@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.Date;
+
 /**
  * @author zrulin
  * @create 2022-03-09 17:37
@@ -26,5 +28,10 @@ public class DiscussPostTest {
     public void test2(){
         Integer integer = discussPostMapper.selectDiscussPostRows(1);
         System.out.println(integer);
+    }
+
+    @Test
+    public void test3(){
+        discussPostMapper.insertDiscussPost(new DiscussPost(null,2,"吃屎啊","怎么吃呢",0,0,new Date(),0,43.2));
     }
 }
