@@ -855,3 +855,80 @@ $.post(
 );
 ```
 
+## 事务管理
+
+什么是事务？
+
+- 事务是由N步数据库操作序列组成的逻辑单元，这些列操作要么全执行，要么全放弃执行。	
+
+事务的特性（ACID）
+
+- 原子性：事务应用中不可再分的最小执行体。
+- 一致性：事务执行的结果，须使数据从一个一致性状态，变成另一个一致性状态。
+- 隔离性：各个事务执行互不干扰，任何事务的内部操作对其他事务都是隔离的。
+- 持久性：事务一旦提交，对数据所作的任何改变都要记录到永久存储器中。
+
+事务的隔离性：
+
+- 常见的并发异常：
+  - 第一类丢失更新，第二类丢失更新（两种更新问题）
+    - ![image-20220315162211391](img/image-20220315162211391.png) 
+    - ![image-20220315162231881](img/image-20220315162231881.png) 
+  - 脏读，不可重复读，幻读。
+    - ![image-20220315162316025](img/image-20220315162316025.png) 
+    - ![image-20220315162336749](img/image-20220315162336749.png) 
+    - ![image-20220315162423168](img/image-20220315162423168.png) 
+    - 
+- 常见的隔离级别
+  - Read UnCommitted ：读取未提交的数据
+  - Read Committed   ：读取已提交的数据
+  - Repeatable Read ：可重复读
+  - Serializable ：串行化
+  - 不同的隔离级别有不同的问题：
+  - ![image-20220315162523371](img/image-20220315162523371.png) 
+- 实现机制
+  - 悲观锁（数据库）
+    - 共享锁（S锁）
+      - 事务A对某数据加了共享锁后，其他事务只能对该数据加共享锁，但不能加排他锁。
+    - 排他锁（X锁）
+      - 事务B对某数据加了排他锁以后，其他事务对该数据既不能加共享锁，也不能加排他锁。
+  - 乐观锁（自定义）
+    - 版本号，时间戳等
+    - 在更新数据前，检查版本号是否发生变化，若变化则取消本次更新，否则就更新数据（版本号+1）。
+
+
+
+Spring事务管理：
+
+Spring事务管理是spring引以为豪的技术点。无论你底层写的是什么数据，是mysql,Oracle,sqlserver,甚至是redis这种nosql数据库。也没问题，spring对任何数据库做事务管理。API都是统一的。一套API能够管理所有数据库事务。
+
+- 声明式事务
+  - 通过xml配置，声明某方法的事务特征。
+  - 通过注解，声明某方法的事务特征
+- 编程式事务
+  - 通过Transaction Template 管理事务，并通过它执行数据库的操作。
+
+
+
+给帖子回帖的时候需要进行事务管理，因为功能实现上有一个帖子数量的功能，每一个人回帖成功与否都影响着这个帖子数量的动态变化，所以需要进行事务管理。
+
+```java
+   @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED,propagation = Propagation.REQUIRED)
+    public int addComment(Comment comment) {
+        if(comment == null){
+            throw new IllegalArgumentException("参数不能为空！");
+        }
+        //添加评论
+        comment.setContent(HtmlUtils.htmlEscape(comment.getContent()));
+        comment.setContent(sensitiveFilter.filter(comment.getContent()));
+        int rows = commentMapper.insertComment(comment);
+
+        if(comment.getEntityType() == ENTITY_TYPE_POST){
+            int count = commentMapper.selectCountByEntity(comment.getEntityType(),comment.getEntityId());
+            discussPostMapper.updateCommentCount(comment.getEntityId(),count);
+        }
+        return rows;
+    }
+```
+

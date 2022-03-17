@@ -43,4 +43,12 @@ public interface DiscussPostMapper {
      * @return
      */
     public DiscussPost selectPostDetail(int id);
+
+    /**
+     * 根据帖子Id修改回帖数量
+     * @param postId
+     * @param count
+     * @return
+     */
+    public int updateCommentCount(int postId, int count);
 }

@@ -34,4 +34,9 @@ public class DiscussPostTest {
     public void test3(){
         discussPostMapper.insertDiscussPost(new DiscussPost(null,2,"吃屎啊","怎么吃呢",0,0,new Date(),0,43.2));
     }
+
+    @Test
+    public void test4(){
+        discussPostMapper.updateCommentCount(22,10);
+    }
 }
