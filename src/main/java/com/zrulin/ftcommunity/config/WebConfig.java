@@ -1,9 +1,8 @@
 package com.zrulin.ftcommunity.config;
 
-import com.mysql.cj.log.Log;
-import com.zrulin.ftcommunity.interceptor.DemoInterceptor;
-import com.zrulin.ftcommunity.interceptor.LoginInterceptor;
-import com.zrulin.ftcommunity.interceptor.LoginRequireInterceptor;
+import com.zrulin.ftcommunity.contorller.interceptor.DemoInterceptor;
+import com.zrulin.ftcommunity.contorller.interceptor.LoginInterceptor;
+import com.zrulin.ftcommunity.contorller.interceptor.LoginRequireInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;

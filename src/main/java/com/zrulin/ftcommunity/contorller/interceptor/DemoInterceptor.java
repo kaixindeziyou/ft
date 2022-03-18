@@ -1,4 +1,4 @@
-package com.zrulin.ftcommunity.interceptor;
+package com.zrulin.ftcommunity.contorller.interceptor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -7,9 +7,6 @@ import com.zrulin.ftcommunity.pojo.User;
 import com.zrulin.ftcommunity.service.CommentService;
 import com.zrulin.ftcommunity.service.DiscussPostService;
 import com.zrulin.ftcommunity.service.UserService;
-import com.zrulin.ftcommunity.service.impl.CommentServiceImpl;
-import com.zrulin.ftcommunity.service.impl.DiscussPostServiceImpl;
-import com.zrulin.ftcommunity.service.impl.UserServiceImpl;
 import com.zrulin.ftcommunity.util.CommunityConstant;
 import com.zrulin.ftcommunity.util.CommunityUtil;
 import com.zrulin.ftcommunity.util.HostHolder;
@@ -23,7 +20,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import javax.annotation.PostConstruct;
 import java.util.*;
 
 /**

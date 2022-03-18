@@ -1,4 +1,4 @@
-package com.zrulin.ftcommunity.interceptor;
+package com.zrulin.ftcommunity.contorller.interceptor;
 
 import com.zrulin.ftcommunity.pojo.LoginTicket;
 import com.zrulin.ftcommunity.pojo.User;
@@ -45,7 +45,7 @@ public class LoginInterceptor implements HandlerInterceptor {
     public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
         //在controller之后将user对象装入model
         User user = hostHolder.getUser();
-        if(user != null || modelAndView != null){
+        if(user != null && modelAndView != null){
             modelAndView.addObject("loginUser",user);
         }
     }

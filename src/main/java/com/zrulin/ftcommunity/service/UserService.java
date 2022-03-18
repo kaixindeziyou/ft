@@ -13,6 +13,8 @@ public interface UserService {
 
     public User findUserById(Integer id);
 
+    public User findUserByUsername(String username);
+
     /**
      * 判断合法性，注册，发送邮件
      * @param user

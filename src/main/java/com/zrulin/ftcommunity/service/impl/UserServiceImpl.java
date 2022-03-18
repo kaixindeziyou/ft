@@ -50,6 +50,11 @@ public class UserServiceImpl implements UserService, CommunityConstant {
     }
 
     @Override
+    public User findUserByUsername(String username) {
+        return userMapper.selectByUsername(username);
+    }
+
+    @Override
     public Map<String, Object> register(User user) {
         Map<String, Object> map = new HashMap<>();
         //空值处理

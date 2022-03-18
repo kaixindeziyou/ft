@@ -932,3 +932,86 @@ Spring事务管理是spring引以为豪的技术点。无论你底层写的是�
     }
 ```
 
+## 统一处理异常
+
+@ControllerAdvice
+
+- 用于修饰类，表示该类是Controller的全局配置类
+- 在此类中，可以对Controller进行如下三种全局配置：
+  - 异常处理方案，绑定数据方案，绑定参数方案
+
+@ExceptionHandle
+
+- 用于修饰方法，该方法会在Controller出现异常后被调用，用于处理捕获到的异常。
+
+@ModelAttribute
+
+- 用于修饰方法，该方法回在Controller方法执行前调用，用于Model对象绑定参数。
+
+@DataBinder
+
+- 用于修饰方法，该方法会在Controller方法执行前被调用，用于绑定参数的转换器。
+
+```java
+/**
+ * @author zrulin
+ * @create 2022-03-18 16:22
+ */
+//@ControllerAdvice 这个组件会扫描所有的bean,annotations = Controller.class只扫描带有Controller的注解
+@ControllerAdvice(annotations = Controller.class)
+public class ExceptionAdvice {
+
+    private static final Logger logger = LoggerFactory.getLogger(ExceptionAdvice.class);
+
+    //加一个方法，用来处理所有的错误情况
+    // @ExceptionHandler()括号里写要声明哪些异常
+    //Exception是所有异常的父类，所有异常都用它来处理就完了。
+    //方法必须是公有的，没返回值。
+    //方法中可以带很多参数，常用的就三个：
+        //Exception : controller中带的异常，发生异常就会把这个异常传过来，我们可以处理这个异常。
+        //request 和 response
+    @ExceptionHandler({Exception.class})
+    public void handleException(Exception e, HttpServletResponse response, HttpServletRequest request ) throws IOException {
+        //把异常记录到日志里面
+        logger.error("服务器发生异常："+e.getMessage());
+        //记录详细异常信息
+        for(StackTraceElement element : e.getStackTrace()){
+            logger.error(element.toString());
+        }
+        //判断发生的请求是普通请求，还是异步请求（返回json的那种）
+        String xRequestedWith = request.getHeader("x-requested-with");
+        if("XMLHttpRequest".equals(xRequestedWith)){//说明是异步请求
+            response.setContentType("application/plain;charset=utf-8");
+            PrintWriter writer = response.getWriter();
+            writer.write(CommunityUtil.getJsonString(1,"服务器异常！"));
+        }else {
+            response.sendRedirect(request.getContextPath() +"/error");
+        }
+    }
+}
+```
+
+报错500服务器异常，就可以统一到这个里面来处理，用logger日志记录下来再返回错误信息。
+
+
+
+## 统一记录日志
+
+记录日志是系统需求，不是业务需求，
+
+把记录日志耦合在代码里面是很有坏处的，相当于把系统需求和业务需求耦合在一起。
+
+如果将来哪一天，我的系统需求发生变化，比如说记录日志的位置发生变化，就需要对代码很大的改动。
+
+用Aop的方法把记录日志实现。
+
+![image-20220318172440641](img/image-20220318172440641.png) 
+
+- 编译时织入：
+  - 好处：程序编译的时候，代码已经编织好了，运行时速度快。
+  - 但是织入的时机比较早，编译时织入可能很多运行时的条件不知道，可能有些特殊情况还处理的没有那么精细
+- 运行时织入
+  - 它的好处是，程序已经运行起来了，这个时候所有的运行条件都知道，想织入什么代码都能解决。
+  - 缺点是，一边运行，一边还要织入代码，效率是要低的。
+
+![image-20220318172741853](img/image-20220318172741853.png) 

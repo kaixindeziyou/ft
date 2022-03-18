@@ -1,4 +1,4 @@
-package com.zrulin.ftcommunity.interceptor;
+package com.zrulin.ftcommunity.contorller.interceptor;
 
 import com.zrulin.ftcommunity.annotation.LoginRequired;
 import com.zrulin.ftcommunity.util.HostHolder;
