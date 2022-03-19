@@ -72,7 +72,9 @@ public class MessageController {
         //获取分页
         page.setPath("/letter/detail/" + conversationId);
         page.setRows(messageService.findLetterCount(conversationId));
-        page.setCurrent(page.getTotal());
+        if(page.getCurrent() == null){
+            page.setCurrent(page.getTotal());
+        }
 
         //获取私信用户
         User targetUser = getLetterTarget(conversationId);

@@ -2,6 +2,8 @@
 
 # FTCommunity
 
+==**Partners**==   -  寻找最合适你的搭档
+
 ## 发送邮件
 
 - 邮箱设置
@@ -1015,3 +1017,75 @@ public class ExceptionAdvice {
   - 缺点是，一边运行，一边还要织入代码，效率是要低的。
 
 ![image-20220318172741853](img/image-20220318172741853.png) 
+
+```java
+//spring aop实现的Demo
+@Component
+@Aspect
+public class DemoAspect {
+    @Pointcut("execution(* com.zrulin.ftcommunity.service.*.*(..))")
+    public void pointcut(){
+
+    }
+
+    @Before("pointcut()")
+    public void before(){
+        System.out.println("before");
+    }
+
+    @After("pointcut()")
+    public void after(){
+        System.out.println("after");
+    }
+
+    @AfterReturning("pointcut()")
+    public void afterReturning(){
+        System.out.println("afterReturning");
+    }
+
+    @AfterThrowing("pointcut()")
+    public void afterThrowing(){
+        System.out.println("afterThrowing");
+    }
+
+    @Around("pointcut()")
+    public Object around(ProceedingJoinPoint joinPoint) throws Throwable {//这个参数是连接点
+        System.out.println("around  before");
+        //Object 是如果目标组件有返回值
+        Object obj = joinPoint.proceed();//调目标对象被处理的那个逻辑(就是目标组件的方法)
+        System.out.println("around  after");
+        return obj;
+    }
+}
+```
+
+
+
+统一日志Aop实现：
+
+```java
+@Aspect
+@Component
+public class ServiceLogAspect {
+
+    private static final Logger logger = LoggerFactory.getLogger(ServiceLogAspect.class);
+
+    @Pointcut("execution(* com.zrulin.ftcommunity.service.*.*(..))")
+    public void pointcut(){
+    }
+
+    @Before("pointcut()")
+    public void before(JoinPoint joinPoint){//除了环绕通知以外的通知也可以加这个连接点参数
+        // 用户[1,2,3,4] 在 [xxx],访问了[com.zrulin.ftcommunity.service.xxx()]
+        // 要记录这样格式的日志，首先用户的ip可以用request获取，在这个里面获取request不能简单的参数里面获取，用一个工具类RequestContextHolder、
+        //返回的默认类型是RequestAttributes，这里把他转为子类型ServletRequestAttributes，功能多一点
+         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+         HttpServletRequest request = attributes.getRequest();//获得request对象
+         String ip = request.getRemoteHost();//获得用户ip
+         String now = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+         //获得[com.zrulin.ftcommunity.service.xxx()],前面是。。。后面是获得方法名
+         String target = joinPoint.getSignature().getDeclaringTypeName()+"."+joinPoint.getSignature().getName();
+         logger.info(String.format("[用户【%s】,在【%s】,访问了【%s】。]",ip,now,target));
+    }
+```
+
