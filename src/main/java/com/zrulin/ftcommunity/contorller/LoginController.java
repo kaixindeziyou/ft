@@ -1,13 +1,9 @@
 package com.zrulin.ftcommunity.contorller;
 
 import com.google.code.kaptcha.Producer;
-import com.sun.org.apache.xpath.internal.operations.Mod;
-import com.zrulin.ftcommunity.config.KaptchaConfig;
 import com.zrulin.ftcommunity.pojo.User;
-import com.zrulin.ftcommunity.service.UserService;
 import com.zrulin.ftcommunity.service.impl.UserServiceImpl;
 import com.zrulin.ftcommunity.util.CommunityConstant;
-import com.zrulin.ftcommunity.util.CommunityUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.imageio.ImageIO;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.awt.image.BufferedImage;

@@ -1,9 +1,7 @@
 package com.zrulin.ftcommunity.contorller;
 
-import com.sun.org.apache.xpath.internal.operations.Mod;
 import com.zrulin.ftcommunity.annotation.LoginRequired;
 import com.zrulin.ftcommunity.pojo.User;
-import com.zrulin.ftcommunity.service.UserService;
 import com.zrulin.ftcommunity.service.impl.UserServiceImpl;
 import com.zrulin.ftcommunity.util.CommunityUtil;
 import com.zrulin.ftcommunity.util.HostHolder;
@@ -20,7 +18,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.imageio.ImageIO;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;

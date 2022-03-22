@@ -6,6 +6,7 @@ import com.zrulin.ftcommunity.pojo.Page;
 import com.zrulin.ftcommunity.pojo.User;
 import com.zrulin.ftcommunity.service.CommentService;
 import com.zrulin.ftcommunity.service.DiscussPostService;
+import com.zrulin.ftcommunity.service.LikeServer;
 import com.zrulin.ftcommunity.service.UserService;
 import com.zrulin.ftcommunity.util.CommunityConstant;
 import com.zrulin.ftcommunity.util.CommunityUtil;
@@ -41,6 +42,9 @@ public class DiscussPostController implements CommunityConstant {
     @Autowired
     private CommentService commentService;
 
+    @Autowired
+    private LikeServer likeServer;
+
     /**
      * 将帖子表中的信息按照默认或者规定的分页，展示出去。
      * @param model
@@ -61,6 +65,9 @@ public class DiscussPostController implements CommunityConstant {
                 HashMap<String,Object> map = new HashMap<>();
                 User user = userService.findUserById(post.getUserId());
                 map.put("post",post);
+                //查询帖子赞的数量
+                long entityLikeCount = likeServer.findEntityLikeCount(ENTITY_TYPE_POST, post.getId());
+                map.put("likeCount",entityLikeCount);
                 map.put("user",user);
                 result.add(map);
             }
@@ -92,6 +99,12 @@ public class DiscussPostController implements CommunityConstant {
         //作者
         User user = userService.findUserById(postDetail.getUserId());
         model.addAttribute("user",user);
+        //帖子点赞数量和状态
+        int status = user == null?
+                0: likeServer.findUserLikeStatus(user.getId(), ENTITY_TYPE_POST, postDetail.getId());
+        long entityLikeCount = likeServer.findEntityLikeCount(ENTITY_TYPE_POST, postDetail.getId());
+        model.addAttribute("likeCount",entityLikeCount);
+        model.addAttribute("likeStatus",status);
 
         //评论分页信息
         page.setPath("/discuss/detail/"+postId);
@@ -111,7 +124,12 @@ public class DiscussPostController implements CommunityConstant {
                 commentVO.put("comment",comment);
                 //作者
                 commentVO.put("user",userService.findUserById(comment.getUserId()));
-
+                //评论帖子点赞数量和状态
+                int commentStatus = user == null?
+                        0: likeServer.findUserLikeStatus(user.getId(), ENTITY_TYPE_COMMENT, comment.getId());
+                long commentLikeCount = likeServer.findEntityLikeCount(ENTITY_TYPE_COMMENT, comment.getId());
+                commentVO.put("likeCount",commentLikeCount);
+                commentVO.put("likeStatus",commentStatus);
                 //回复列表
                 List<Comment> replayList = commentService.findCommentByEntity(ENTITY_TYPE_COMMENT,
                         comment.getId(), 0, Integer.MAX_VALUE);
@@ -124,6 +142,12 @@ public class DiscussPostController implements CommunityConstant {
                         replayVO.put("replay",replay);
                         //作者
                         replayVO.put("user",userService.findUserById(replay.getUserId()));
+                        //回复帖子点赞数量和状态
+                        int replayStatus = user == null?
+                                0: likeServer.findUserLikeStatus(user.getId(), ENTITY_TYPE_COMMENT, replay.getId());
+                        long replayLikeCount = likeServer.findEntityLikeCount(ENTITY_TYPE_COMMENT, replay.getId());
+                        replayVO.put("likeCount",replayLikeCount);
+                        replayVO.put("likeStatus",replayStatus);
                         //回复目标
                         User targetUser = replay.getTargetId() == 0 ? null : userService.findUserById(replay.getTargetId());
                         replayVO.put("target",targetUser);

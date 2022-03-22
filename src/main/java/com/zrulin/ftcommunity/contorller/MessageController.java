@@ -1,6 +1,5 @@
 package com.zrulin.ftcommunity.contorller;
 
-import com.mysql.cj.Messages;
 import com.zrulin.ftcommunity.pojo.Message;
 import com.zrulin.ftcommunity.pojo.Page;
 import com.zrulin.ftcommunity.pojo.User;

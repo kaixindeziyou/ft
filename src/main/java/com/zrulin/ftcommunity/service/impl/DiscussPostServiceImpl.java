@@ -3,12 +3,10 @@ package com.zrulin.ftcommunity.service.impl;
 import com.zrulin.ftcommunity.dao.DiscussPostMapper;
 import com.zrulin.ftcommunity.pojo.DiscussPost;
 import com.zrulin.ftcommunity.service.DiscussPostService;
-import com.zrulin.ftcommunity.util.CommunityUtil;
 import com.zrulin.ftcommunity.util.SensitiveFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.HtmlUtils;
-import org.unbescape.html.HtmlEscape;
 
 
 import java.util.List;
