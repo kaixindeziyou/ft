@@ -1089,3 +1089,111 @@ public class ServiceLogAspect {
     }
 ```
 
+
+
+## 整合redis
+
+- 引入依赖
+
+  - ```xml
+            <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-redis -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-data-redis</artifactId>
+            </dependency>
+    ```
+
+- 配置redis
+
+  - ```properties
+    # redisProperties
+    # redis服务器地址
+    spring.redis.host=47.97.32.207
+    # redis 服务器连接端口
+    spring.redis.port=8888
+    # redis 数据库索引
+    spring.redis.password=dongshan
+    # Redis 数据库索引
+    spring.redis.database=11
+    # 连接超时时间
+    spring.redis.timeout=1800000
+    # 连接池最大连接数(使用负值表示没有限制)
+    spring.redis.lettuce.pool.max-active=20
+    # 最大阻塞等待时间(负数表示没有限制)
+    spring.redis.lettuce.pool.max-wait=-1
+    # 连接池中最大空闲连接
+    spring.redis.lettuce.pool.max-idle=5
+    # 连接池中最小空闲连接
+    spring.redis.lettuce.pool.min-idle=0
+    ```
+
+- 编写配置类
+
+  - ```java
+    @Configuration
+    public class RedisConfig {
+    
+        //new一个对象（redisTemplate对象）
+        //其实Spring boot会自动配置一个redisTemplate对象，但是它的key是Object类型的，我们为了使用String更加方便，重新配置。
+    //    参数RedisConnectionFactory，这个bean已经被容器装配了，直接注入进来。
+        @Bean
+        public RedisTemplate<String,Object> redisTemplate (RedisConnectionFactory factory){
+            //设置它的相关的格式
+            //实例化这个Bean
+            RedisTemplate<String,Object> template = new RedisTemplate<>();
+            //设置这个连接工厂，具备访问redis数据库的能力
+            template.setConnectionFactory(factory);
+    
+            //配置主要是配序列化的方式，我们写的程序是Java程序，得到Java类型的数据，最终要把这个数据存到redis数据库中
+            //就要指定一种序列化的方式，或者说是数据转化的方式
+    
+            //设置key的序列化方式
+            //RedisSerializer.string()返回一个能够序列化字符串的序列化器
+            template.setKeySerializer(RedisSerializer.string());
+            //设置value的序列化方式
+            template.setValueSerializer(RedisSerializer.json());
+            //设置hash的key的序列化方式
+            template.setHashKeySerializer(RedisSerializer.string());
+            //设置hash的value的序列化方式
+            template.setHashValueSerializer(RedisSerializer.json());
+    
+            //为了让Template中的这些参数生效，要触发一下
+            template.afterPropertiesSet();
+            return template;
+        }
+    }
+    ```
+
+  ==redis编程式事务管理==
+
+```java
+//在开发的时候spring也是支持编程式事务，还有声明式事务，声明式事务更简单，只要做一些配置，加一个注解就可以了。
+//声明式事务只能精确到一个方法，方法的内部整个逻辑都是事务的范围，方法之内就没法去查询了，所以通常用编程式事务
+//编程式事务
+@Test
+public  void testTransaction(){
+    Object obj = redisTemplate.execute(new SessionCallback() {
+        //这个sessionCallback接口里面带了一个execute方法，redisTemplate.execute调用的时候，它底层自己去调的。
+        //调的时候它会把这个 operations（执行命令的对象）传过来，用这个对象来执行命令，管理事务。
+        //最终这个方法会返回一些数据，返回给这个redisTemplate.execute方法。
+        @Override
+        public Object execute(RedisOperations operations) throws DataAccessException {
+            String key = "test:tx";
+
+            operations.multi();//启动事务
+            operations.opsForSet().add(key,"啥也不是");
+            operations.opsForSet().add(key,"好像也是");
+            operations.opsForSet().add(key,"当然不是");
+
+            //因为在这个里面事务还没有提交，所以查询是没有结果的。
+            System.out.println(operations.opsForSet().members(key));
+
+            return operations.exec();//提交事务
+        }
+    });
+    //结果：[1, 1, 1, [好像也是, 当然不是, 啥也不是]]
+    // 每一个1表示每一次影响的数据的行数
+    System.out.println(obj);
+}
+```
+
