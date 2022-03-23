@@ -78,7 +78,7 @@
 				<ul class="list-unstyled">
 					<li class="media pb-3 pt-3 mb-3 border-bottom position-relative" th:each="cvo:${conversations}">
 						<span class="badge badge-danger" th:text="${cvo.letterUnreadCount}" th:if="${cvo.letterUnreadCount!=0}">3</span>
-						<a href="profile.html">
+						<a th:href="@{|/user/profile/${cvo.target.id}|}">
 							<img th:src="${cvo.target.headerUrl}" class="mr-4 rounded-circle user-header" alt="用户头像" >
 						</a>
 						<div class="media-body">

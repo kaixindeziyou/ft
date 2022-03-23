@@ -2,8 +2,10 @@ package com.zrulin.ftcommunity.contorller;
 
 import com.zrulin.ftcommunity.annotation.LoginRequired;
 import com.zrulin.ftcommunity.pojo.User;
+import com.zrulin.ftcommunity.service.FollowService;
 import com.zrulin.ftcommunity.service.LikeServer;
 import com.zrulin.ftcommunity.service.impl.UserServiceImpl;
+import com.zrulin.ftcommunity.util.CommunityConstant;
 import com.zrulin.ftcommunity.util.CommunityUtil;
 import com.zrulin.ftcommunity.util.HostHolder;
 import org.apache.commons.lang3.StringUtils;
@@ -32,7 +34,7 @@ import java.util.Map;
  */
 @Controller
 @RequestMapping("/user")
-public class UserController {
+public class UserController implements CommunityConstant {
     @Autowired
     private UserServiceImpl userService;
 
@@ -52,6 +54,9 @@ public class UserController {
 
     @Autowired
     private LikeServer likeServer;
+
+    @Autowired
+    private FollowService followService;
 
     /**
      * 定向到setting页面。
@@ -172,6 +177,20 @@ public class UserController {
         //获取被点赞数量
         int userLikeCount = likeServer.findUserLikeCount(userId);
         model.addAttribute("likeCount",userLikeCount);
+
+        //获取关注和粉丝数量以及关注状态
+        //关注数量
+        long followeeCount = followService.findFolloweeCount(userId, ENTITY_TYPE_USER);
+        model.addAttribute("followeeCount",followeeCount);
+        //粉丝数量
+        long followerCount = followService.findFollowerCount(ENTITY_TYPE_USER, userId);
+        model.addAttribute("followerCount",followerCount);
+        //关注状态
+        boolean status = false;
+        if(hostHolder.getUser() != null){
+            status = followService.followStatus(ENTITY_TYPE_USER, userId, hostHolder.getUser().getId());
+        }
+        model.addAttribute("followStatus",status);
         return "site/profile";
 
     }

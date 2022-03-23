@@ -48,8 +48,8 @@ public class LikeServiceImpl implements LikeServer {
                 //这个查询操作一定要放到事务之外，如果事务之内不会立即得到结果。
                 // 因为他在事务当中执行的所有命令没有立刻执行，而是把这些命令放到了队列里面，
                 //当你提交事务的时候统一提交，在执行。
-
                 Boolean isMember = operations.opsForSet().isMember(getLikeKey, userId);
+                operations.multi();
                 if(isMember){
                     operations.opsForSet().remove(getLikeKey, userId);
                     operations.opsForValue().decrement(userKey);
@@ -57,7 +57,7 @@ public class LikeServiceImpl implements LikeServer {
                     operations.opsForSet().add(getLikeKey,userId);
                     operations.opsForValue().increment(userKey);
                 }
-                return null;
+                return operations.exec();
             }
         });
     }
