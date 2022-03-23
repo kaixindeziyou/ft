@@ -16,8 +16,18 @@ public class RedisKeyUtil {
     //用来存用户所收到赞的数量
     private static final String PREFIX_USER_LIKE = "like:user";
 
+    // 用来处理关注和粉丝
     private static final String PREFIX_FOLLOWEE = "followee";
     private static final String PREFIX_FOLLOWER = "follower";
+
+    // 用来处理验证码
+    private static final String PREFIX_KAPTCHA = "kaptcha";
+
+    //用来处理ticket凭证
+    private static final String PREFIX_TICKET = "ticket";
+
+    //用来处理缓存常用的用户数据
+    private static final String PREFIX_USER = "user";
 
 
     /**
@@ -61,5 +71,20 @@ public class RedisKeyUtil {
      */
     public static String getFollowerKey(int entityType, int entityId){
         return PREFIX_FOLLOWER + SPLIT + entityType + SPLIT + entityId;
+    }
+
+    // 登录验证码
+    public static String getKaptchaKey(String owner){
+        return PREFIX_KAPTCHA + SPLIT + owner;
+    }
+
+    // 登录的凭证
+    public static String getTicketKey(String ticket){
+        return PREFIX_TICKET + SPLIT + ticket;
+    }
+
+    // 缓存常用的用户
+    public static String getCommonUserKey(int userId){
+        return PREFIX_USER + SPLIT + userId;
     }
 }

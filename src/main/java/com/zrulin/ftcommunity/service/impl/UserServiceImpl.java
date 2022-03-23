@@ -8,9 +8,11 @@ import com.zrulin.ftcommunity.service.UserService;
 import com.zrulin.ftcommunity.util.CommunityConstant;
 import com.zrulin.ftcommunity.util.CommunityUtil;
 import com.zrulin.ftcommunity.util.MailClient;
+import com.zrulin.ftcommunity.util.RedisKeyUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -18,6 +20,7 @@ import org.thymeleaf.context.Context;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author zrulin
@@ -34,8 +37,11 @@ public class UserServiceImpl implements UserService, CommunityConstant {
     @Autowired
     private TemplateEngine templateEngine;
 
+//    @Autowired
+//    private LoginTicketMapper ticketMapper;
+
     @Autowired
-    private LoginTicketMapper ticketMapper;
+    private RedisTemplate redisTemplate;
 
     //发邮件要包含激活码，激活码要包含域名和项目名。
     @Value("${community.path.domain}")
@@ -46,7 +52,32 @@ public class UserServiceImpl implements UserService, CommunityConstant {
 
     @Override
     public User findUserById(Integer id) {
-        return userMapper.selectById(id);
+//        return userMapper.selectById(id);
+        User user = getCache(id);
+        if(user == null){
+            user = initCache(id);
+        }
+        return user;
+    }
+
+    @Override
+    public User getCache(int userId) {
+        String commonUserKey = RedisKeyUtil.getCommonUserKey(userId);
+        return (User) redisTemplate.opsForValue().get(commonUserKey);
+    }
+
+    @Override
+    public User initCache(int userId) {
+        User user = userMapper.selectById(userId);
+        String commonUserKey = RedisKeyUtil.getCommonUserKey(userId);
+        redisTemplate.opsForValue().set(commonUserKey,user,3600,TimeUnit.SECONDS);
+        return user;
+    }
+
+    @Override
+    public void clearCatch(int userId) {
+        String commonUserKey = RedisKeyUtil.getCommonUserKey(userId);
+        redisTemplate.delete(commonUserKey);
     }
 
     @Override
@@ -117,6 +148,7 @@ public class UserServiceImpl implements UserService, CommunityConstant {
             return ACTIVATION_REPEAT;
         }else if(user.getActivationCode().equals(code)){
             userMapper.updateStatus(userId,1);
+            clearCatch(userId);
             return ACTIVATION_SUCCESS;
         }else{
             return ACTIVATION_FAILURE;
@@ -156,8 +188,10 @@ public class UserServiceImpl implements UserService, CommunityConstant {
         }
         //生成登录凭证,秒换成毫秒所以*1000，date里面存的是过期时间。
         LoginTicket ticket = new LoginTicket(null, user.getId(), CommunityUtil.generateUUID(), 0, new Date(System.currentTimeMillis() + expiredSeconds * 1000));
-        ticketMapper.insertTicket(ticket);
-        System.out.println(ticket.getExpired());
+//        ticketMapper.insertTicket(ticket);
+        //把凭证存入redis
+        String ticketKey = RedisKeyUtil.getTicketKey(ticket.getTicket());
+        redisTemplate.opsForValue().set(ticketKey,ticket);
         result.put("ticket",ticket.getTicket());
         return result;
     }
@@ -165,17 +199,26 @@ public class UserServiceImpl implements UserService, CommunityConstant {
 
     @Override
     public void logout(String ticket) {
-        ticketMapper.updateStatus(ticket,1);
+//        ticketMapper.updateStatus(ticket,1);
+        String ticketKey = RedisKeyUtil.getTicketKey(ticket);
+        LoginTicket loginTicket = (LoginTicket) redisTemplate.opsForValue().get(ticketKey);
+        loginTicket.setStatus(1);
+        redisTemplate.opsForValue().set(ticketKey,loginTicket);
     }
 
     @Override
     public LoginTicket findLoginTicket(String ticket) {
-        return ticketMapper.selectByTicket(ticket);
+//        return ticketMapper.selectByTicket(ticket);
+        String ticketKey = RedisKeyUtil.getTicketKey(ticket);
+        return (LoginTicket) redisTemplate.opsForValue().get(ticketKey);
     }
 
     @Override
     public int updateHeaderUrl(Integer userId, String url) {
-        return userMapper.updateHeader(userId,url);
+        //要把删除缓存放在修改数据库之后，万一更新失败了，但是提前把缓存清除掉了也不太好
+        int rows = userMapper.updateHeader(userId,url);
+        clearCatch(userId);
+        return rows;
     }
 
     @Override
@@ -199,6 +242,7 @@ public class UserServiceImpl implements UserService, CommunityConstant {
         //加密新密码
         password = CommunityUtil.md5(user.getSalt()+password);
         userMapper.updatePassword(user.getId(),password);
+        clearCatch(user.getId());
         return result;
     }
 }

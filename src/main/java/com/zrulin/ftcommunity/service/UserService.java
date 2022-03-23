@@ -11,7 +11,33 @@ import java.util.Map;
  */
 public interface UserService {
 
+    /**
+     * 通过id获取用户信息
+     * @param id
+     * @return
+     */
     public User findUserById(Integer id);
+
+    /**
+     * 优先从缓存中取值
+     * @param userId
+     * @return
+     */
+    public User getCache(int userId);
+
+    /**
+     * 取不到时初始化缓存数据
+     * @param userId
+     * @return
+     */
+    public User initCache(int userId);
+
+    /**
+     * 数据变更时清除缓存数据
+     * 删除要比更新简单， 更新数据可能会有并发的问题，删除比较干脆
+     * @param userId
+     */
+    public void clearCatch(int userId);
 
     public User findUserByUsername(String username);
 
