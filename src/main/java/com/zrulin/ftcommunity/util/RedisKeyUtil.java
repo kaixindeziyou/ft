@@ -13,13 +13,29 @@ public class RedisKeyUtil {
     //用来存实体的赞，用一个前缀开头
     private static final String PREFIX_ENTITY_LIKE = "like:entity";
 
+    //用来存用户所收到赞的数量
+    private static final String PREFIX_USER_LIKE = "like:user";
+
+
     /**
      * 生成某个实体的赞的key
-     * like:entity:entityType:entityId  -> 这个key所对应的值用一个set（userId），而不是简单的一个整数
+     * like:entity:entityType:entityId  ->    set（userId）
+     * 这个key所对应的值用一个set（userId），而不是简单的一个整数
      * 因为如果将来我们的需求变了，需要知道是谁点的赞，用set能够满足。set里面存userId
      * @return
      */
     public static String getEntityLikeKey(int EntityType, int EntityId){
         return PREFIX_ENTITY_LIKE + SPLIT + EntityType + SPLIT+EntityId;
     }
+
+    /**
+     * 某个用户的赞
+     * like:user:userId   -> int
+     * @param userId
+     * @return
+     */
+    public static String getUserKey(int userId){
+        return PREFIX_USER_LIKE + SPLIT + userId;
+    }
+
 }

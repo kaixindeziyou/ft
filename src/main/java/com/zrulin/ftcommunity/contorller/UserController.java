@@ -2,6 +2,7 @@ package com.zrulin.ftcommunity.contorller;
 
 import com.zrulin.ftcommunity.annotation.LoginRequired;
 import com.zrulin.ftcommunity.pojo.User;
+import com.zrulin.ftcommunity.service.LikeServer;
 import com.zrulin.ftcommunity.service.impl.UserServiceImpl;
 import com.zrulin.ftcommunity.util.CommunityUtil;
 import com.zrulin.ftcommunity.util.HostHolder;
@@ -49,6 +50,9 @@ public class UserController {
     @Autowired
     private HostHolder hostHolder;
 
+    @Autowired
+    private LikeServer likeServer;
+
     /**
      * 定向到setting页面。
      * @return
@@ -59,6 +63,12 @@ public class UserController {
         return "site/setting";
     }
 
+    /**
+     * 修改头像
+     * @param headImage
+     * @param model
+     * @return
+     */
     @LoginRequired
     @PostMapping("/headerImage")
     public String updateHeaderUrl(MultipartFile headImage, Model model){
@@ -93,6 +103,11 @@ public class UserController {
         return "redirect:/index";
     }
 
+    /**
+     * 取头像
+     * @param filename
+     * @param response
+     */
     @LoginRequired
     @GetMapping("/header/{filename}")
     public void getHeader(@PathVariable("filename") String filename,
@@ -118,6 +133,14 @@ public class UserController {
         }
     }
 
+    /**
+     * 修改密码
+     * @param password
+     * @param oldPassword
+     * @param rePassword
+     * @param model
+     * @return
+     */
     @LoginRequired
     @PostMapping("/updatePassword")
     public String updatePassword(String password, String oldPassword,String rePassword, Model model){
@@ -134,5 +157,22 @@ public class UserController {
             model.addAttribute("oldPasswordMsg",map.get("oldPasswordMsg"));
             return"site/setting";
         }
+    }
+
+    @GetMapping("/profile/{userId}")
+    public String getProfilePage(@PathVariable("userId") int userId,
+                                 Model model){
+        //获取用户信息
+        User user = userService.findUserById(userId);
+        //为了避免有人恶意攻击，传错误信息进来，反复去查
+        if(user == null){
+            throw new RuntimeException("该用户不存在");
+        }
+        model.addAttribute("user",user);
+        //获取被点赞数量
+        int userLikeCount = likeServer.findUserLikeCount(userId);
+        model.addAttribute("likeCount",userLikeCount);
+        return "site/profile";
+
     }
 }

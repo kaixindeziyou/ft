@@ -29,8 +29,9 @@ public class LikeController {
     @ResponseBody
     public String like(
             int entityType,
-            int entityId){
-        likeServer.like(hostHolder.getUser().getId(),entityType,entityId);
+            int entityId,
+            int entityUserId){
+        likeServer.like(hostHolder.getUser().getId(),entityType,entityId,entityUserId);
         //点赞数量
         long entityLikeCount = likeServer.findEntityLikeCount(entityType, entityId);
         //点赞状态
