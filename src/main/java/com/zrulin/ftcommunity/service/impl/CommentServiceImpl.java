@@ -1,5 +1,6 @@
 package com.zrulin.ftcommunity.service.impl;
 
+import com.zrulin.ftcommunity.dao.ActivityMapper;
 import com.zrulin.ftcommunity.dao.CommentMapper;
 import com.zrulin.ftcommunity.dao.DiscussPostMapper;
 import com.zrulin.ftcommunity.pojo.Comment;
@@ -30,7 +31,8 @@ public class CommentServiceImpl implements CommentService, CommunityConstant {
     @Autowired
     private DiscussPostMapper discussPostMapper;
 
-
+    @Autowired
+    private ActivityMapper activityMapper;
 
     @Override
     public List<Comment> findCommentByEntity(int entityType, int entityId, int offset, int limit) {
@@ -56,6 +58,10 @@ public class CommentServiceImpl implements CommentService, CommunityConstant {
         if(comment.getEntityType() == ENTITY_TYPE_POST){
             int count = commentMapper.selectCountByEntity(comment.getEntityType(),comment.getEntityId());
             discussPostMapper.updateCommentCount(comment.getEntityId(),count);
+        }
+        if(comment.getEntityType() == ENTITY_TYPE_ACTIVITY){
+            int count = commentMapper.selectCountByEntity(comment.getEntityType(),comment.getEntityId());
+            activityMapper.updateCommentCount(comment.getEntityId(),count);
         }
         return rows;
     }

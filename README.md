@@ -1253,14 +1253,150 @@ public  void testTransaction(){
 ## Redis存储验证码
 
 - 验证码需要频繁的访问和刷新，对性能要求较高
+
 - 验证码不需要永久保存，通常在很短的时间内就会失效。
+
 - 分布式部署时，存在Session共享的问题
+
   - 把数据部署到redis里面，分布式部署的时候，所有的应用服务器都从redis中取得数据。绕过session，避免session共享问题。
+
+  - 关键代码：
+
+    - ```java
+      //生成一个暂时（很快过期）的凭证用于存取验证码（从reids中），存入cookie，让用户持有这个凭证。
+      String kaptchaOwner = CommunityUtil.generateUUID();
+      Cookie cookie = new Cookie("kaptchaOwner",kaptchaOwner);
+      cookie.setMaxAge(60);
+      cookie.setPath(contextPath);//有效路径设置为整个路径下都有效
+      response.addCookie(cookie);
+      //将验证码存入redis
+      String kaptchaKey = RedisKeyUtil.getKaptchaKey(kaptchaOwner);
+      redisTemplate.opsForValue().set(kaptchaKey,text,60, TimeUnit.SECONDS);
+      ```
+
+    - ```java
+            //检查验证码
+      //        String kaptcha = (String) session.getAttribute("code");
+              String kaptcha = null;
+              if(!StringUtils.isBlank(kaptchaOwner)){
+                  String kaptchaKey = RedisKeyUtil.getKaptchaKey(kaptchaOwner);
+                  kaptcha = (String) redisTemplate.opsForValue().get(kaptchaKey);
+              }
+      ```
 
 ## Redis存储登录凭证
 
 - 处理每次请求时，都要查询用户的登录凭证，访问的频率非常高。
 
+  - 关键代码：
+
+    - ```java
+       //生成登录凭证,秒换成毫秒所以*1000，date里面存的是过期时间。
+              LoginTicket ticket = new LoginTicket(null, user.getId(), CommunityUtil.generateUUID(), 0, new Date(System.currentTimeMillis() + expiredSeconds * 1000));
+      //        ticketMapper.insertTicket(ticket);
+              //把凭证存入redis
+              String ticketKey = RedisKeyUtil.getTicketKey(ticket.getTicket());
+              redisTemplate.opsForValue().set(ticketKey,ticket);
+      ```
+
+    - 这里的ticket存入redis但是并不设置过期时间，因为这些数据有用，便于以后统计用户登录的时间频率等。
+
+    - ```java
+          @Override
+          public void logout(String ticket) {
+      //        ticketMapper.updateStatus(ticket,1);
+              String ticketKey = RedisKeyUtil.getTicketKey(ticket);
+              LoginTicket loginTicket = (LoginTicket) redisTemplate.opsForValue().get(ticketKey);
+              loginTicket.setStatus(1);
+              redisTemplate.opsForValue().set(ticketKey,loginTicket);
+          }
+      
+          @Override
+          public LoginTicket findLoginTicket(String ticket) {
+      //        return ticketMapper.selectByTicket(ticket);
+              String ticketKey = RedisKeyUtil.getTicketKey(ticket);
+              return (LoginTicket) redisTemplate.opsForValue().get(ticketKey);
+          }
+      ```
+
 ## Redis缓存用户信息
 
 - 处理每次请求时，都需要根据凭证查询用户信息，访问的频率非常高
+
+  - 关键代码
+
+    - ```java
+      /**
+       * 通过id获取用户信息
+       * @param id
+       * @return
+       */
+      public User findUserById(Integer id);
+      
+      /**
+       * 优先从缓存中取值
+       * @param userId
+       * @return
+       */
+      public User getCache(int userId);
+      
+      /**
+       * 取不到时初始化缓存数据
+       * @param userId
+       * @return
+       */
+      public User initCache(int userId);
+      
+      /**
+       * 数据变更时清除缓存数据
+       * 删除要比更新简单， 更新数据可能会有并发的问题，删除比较干脆
+       * @param userId
+       */
+      public void clearCatch(int userId);
+      ```
+
+    - ```java
+        @Override
+          public User findUserById(Integer id) {
+      //        return userMapper.selectById(id);
+              User user = getCache(id);
+              if(user == null){
+                  user = initCache(id);
+              }
+              return user;
+          }
+      
+          @Override
+          public User getCache(int userId) {
+              String commonUserKey = RedisKeyUtil.getCommonUserKey(userId);
+              return (User) redisTemplate.opsForValue().get(commonUserKey);
+          }
+      
+          @Override
+          public User initCache(int userId) {
+              User user = userMapper.selectById(userId);
+              String commonUserKey = RedisKeyUtil.getCommonUserKey(userId);
+              redisTemplate.opsForValue().set(commonUserKey,user,3600,TimeUnit.SECONDS);
+              return user;
+          }
+      
+          @Override
+          public void clearCatch(int userId) {
+              String commonUserKey = RedisKeyUtil.getCommonUserKey(userId);
+              redisTemplate.delete(commonUserKey);
+          }
+      ```
+
+    - ```java
+      @Override
+      public int updateHeaderUrl(Integer userId, String url) {
+          //要把删除缓存放在修改数据库之后，万一更新失败了，但是提前把缓存清除掉了也不太好
+          int rows = userMapper.updateHeader(userId,url);
+          clearCatch(userId);
+          return rows;
+      }
+      ```
+
+      
+
+    

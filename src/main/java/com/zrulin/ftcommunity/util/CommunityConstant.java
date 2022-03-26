@@ -41,5 +41,9 @@ public interface CommunityConstant {
      * 实体类型：用户
      */
     int ENTITY_TYPE_USER=3;
+    /**
+     * 实体类型：比赛
+     */
+    int ENTITY_TYPE_ACTIVITY=4;
 
 }

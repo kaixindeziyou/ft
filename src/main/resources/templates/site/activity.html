@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en" xmlnx:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="icon" th:href="@{/user/header/header.jpeg}"/>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" crossorigin="anonymous">
+	<link rel="stylesheet" th:href="@{/css/global.css}" />
+	<link rel="stylesheet" th:href="@{/css/login.css}" />
+	<title>FTCommunity</title>
+	<style>
+		#temp {
+			left: 1000px;
+			top: 7px;
+		}
+	</style>
+</head>
+<body>	
+	<div class="nk-container">
+		<!-- 头部 -->
+		<header class="bg-dark sticky-top" th:replace="index::ftHeader">
+		</header>
+
+		<!-- 内容 -->
+		<div class="main">
+			<div class="container">
+				<div class="position-relative">
+					<!-- 筛选条件 -->
+					<ul class="nav nav-tabs mb-3">
+						<li class="nav-item">
+							<a class="nav-link " th:href="@{/index}">话题讨论</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link active" th:href="@{/activity/list}">竞赛大厅</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" href="#">队伍招募</a>
+						</li>
+					</ul>
+					<button  type="button" class="btn btn-primary btn-sm position-absolute rt-0"
+							 data-toggle="modal" data-target="#publishModal" th:if="${loginUser!=null}">分享活动</button>
+				</div>
+				<!-- 弹出框 -->
+				<div class="modal fade" id="publishModal" tabindex="-1" role="dialog" aria-labelledby="publishModalLabel" aria-hidden="true">
+					<div class="modal-dialog modal-lg" role="document">
+						<div class="modal-content">
+							<div class="modal-header">
+								<h5 class="modal-title" id="publishModalLabel">活动发布</h5>
+								<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+									<span aria-hidden="true">&times;</span>
+								</button>
+							</div>
+							<div class="modal-body">
+								<form>
+									<div class="form-group">
+										<label for="recipient-name" class="col-form-label">活动名称：</label>
+										<input type="text" class="form-control" id="recipient-name">
+									</div>
+									<div class="form-group">
+										<label for="message-text" class="col-form-label">活动介绍：</label>
+										<textarea class="form-control" id="message-text" rows="15"></textarea>
+									</div>
+									<div class="form-group">
+										<label for="startTime">活动开始报名时间：</label>
+										<input type="date"  id="startTime" value="" />
+									</div>
+									<div class="form-group">
+										<label for="endTime">活动截止报名时间：</label>
+										<input type="date"  id="endTime" value="" />
+									</div>
+									<div class="form-group">
+										<label for="head-image">选择海报:：</label>
+										 <input type="file" id="head-image">
+									</div>
+									<div class="form-group">
+										<label for="recipient-email" class="col-form-label">官方邮箱：</label>
+										<input type="text" class="form-control" id="recipient-email">
+									</div>
+								</form>
+							</div>
+							<div class="modal-footer">
+								<button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+								<button type="button" class="btn btn-primary" id="publishBtn">提交审核</button>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- 提示框 -->
+				<div class="modal fade" id="hintModal" tabindex="-1" role="dialog" aria-labelledby="hintModalLabel" aria-hidden="true">
+					<div class="modal-dialog modal-lg" role="document">
+						<div class="modal-content">
+							<div class="modal-header">
+								<h5 class="modal-title" id="hintModalLabel">提示</h5>
+							</div>
+							<div class="modal-body" id="hintBody">
+								发布完毕!
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<!-- 比赛信息列表 -->
+				<ul class="list-unstyled">
+					<li class="media pb-3 pt-3 mb-3 border-bottom" th:each="map:${activity}">
+						<a th:href="@{|/activity/detail/${map.id}|}">
+							<img th:src="${map.photo}" class="mr-4 rounded-circle" alt="比赛海报" style="width:50px;height:50px;">
+						</a>
+						<div class="media-body">
+							<h6 class="mt-0 mb-3">
+								<a th:href="@{|/activity/detail/${map.id}|}" th:utext="${map.title}"></a>
+							</h6>
+							<div class="text-muted font-size-12">
+								发布方：<u class="mr-3" th:text="${map.issuer}"></u>
+							</div>
+							<div class="text-muted font-size-12">
+								报名开始时间： <b th:text="${#dates.format(map.startTime,'yyyy-MM-dd HH:mm:ss')}"></b>&nbsp;&nbsp;&nbsp;
+								报名截止时间： <b th:text="${#dates.format(map.endTime,'yyyy-MM-dd HH:mm:ss')}"></b>
+								<ul class="d-inline float-right">
+									<li class="d-inline ml-2">留言咨询<span th:text="${map.commentCount}"> 7</span>></li>
+								</ul>
+							</div>
+						</div>
+					</li>
+				</ul>
+				<!-- 分页 -->
+				<nav class="mt-5" th:replace="index::pagination">
+				</nav>
+			</div>
+		</div>
+
+		<!-- 尾部 -->
+		<footer class="bg-dark" th:replace="index::footer">
+
+		</footer>
+	</div>
+
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" crossorigin="anonymous"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" crossorigin="anonymous"></script>
+	<script th:src="@{/js/global.js}"></script>
+	<script th:src="@{/js/activity.js}"></script>
+</body>
+</html>

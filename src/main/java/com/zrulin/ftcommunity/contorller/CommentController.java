@@ -1,5 +1,6 @@
 package com.zrulin.ftcommunity.contorller;
 
+import com.zrulin.ftcommunity.annotation.LoginRequired;
 import com.zrulin.ftcommunity.pojo.Comment;
 import com.zrulin.ftcommunity.service.CommentService;
 import com.zrulin.ftcommunity.util.CommunityConstant;
@@ -26,6 +27,7 @@ public class CommentController implements CommunityConstant {
     @Autowired
     private CommentService commentService;
 
+    @LoginRequired
     @PostMapping("/add/{discussPostId}")
     public String addComment(
             @PathVariable("discussPostId") int discussPostId,
@@ -36,5 +38,16 @@ public class CommentController implements CommunityConstant {
         comment.setCreateTime(new Date());
         commentService.addComment(comment);
         return "redirect:/discuss/detail/" + discussPostId;
+    }
+    @PostMapping("/activityAdd/{activityId}")
+    public String activityAddComment(
+            @PathVariable("activityId") int activityId,
+            Comment comment
+    ){
+        comment.setUserId(hostHolder.getUser().getId());
+        comment.setStatus(0);
+        comment.setCreateTime(new Date());
+        commentService.addComment(comment);
+        return "redirect:/activity/detail/" + activityId;
     }
 }

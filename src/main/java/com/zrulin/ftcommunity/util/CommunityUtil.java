@@ -1,17 +1,22 @@
 package com.zrulin.ftcommunity.util;
 
 import com.alibaba.fastjson.JSONObject;
+import com.zrulin.ftcommunity.pojo.Comment;
+import com.zrulin.ftcommunity.pojo.User;
+import com.zrulin.ftcommunity.service.CommentService;
+import com.zrulin.ftcommunity.service.LikeServer;
+import com.zrulin.ftcommunity.service.UserService;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.DigestUtils;
 
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * @author zrulin
  * @create 2022-03-11 8:19
  */
-public class CommunityUtil {
+public class CommunityUtil implements CommunityConstant{
 
     //生成随机字符串
     public static String generateUUID(){
@@ -55,4 +60,6 @@ public class CommunityUtil {
     public static String getJsonString(int code){
        return getJsonString(code,null,null);
     }
+
+
 }

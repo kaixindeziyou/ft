@@ -8,6 +8,7 @@ import com.zrulin.ftcommunity.service.CommentService;
 import com.zrulin.ftcommunity.service.DiscussPostService;
 import com.zrulin.ftcommunity.service.LikeServer;
 import com.zrulin.ftcommunity.service.UserService;
+import com.zrulin.ftcommunity.util.CommonMethod;
 import com.zrulin.ftcommunity.util.CommunityConstant;
 import com.zrulin.ftcommunity.util.CommunityUtil;
 import com.zrulin.ftcommunity.util.HostHolder;
@@ -45,6 +46,9 @@ public class DiscussPostController implements CommunityConstant {
     @Autowired
     private LikeServer likeServer;
 
+    @Autowired
+    private CommonMethod commonMethod;
+
     /**
      * 将帖子表中的信息按照默认或者规定的分页，展示出去。
      * @param model
@@ -68,12 +72,28 @@ public class DiscussPostController implements CommunityConstant {
                 //查询帖子赞的数量
                 long entityLikeCount = likeServer.findEntityLikeCount(ENTITY_TYPE_POST, post.getId());
                 map.put("likeCount",entityLikeCount);
+                map.put("interval",getInterval(post.getCreateTime()));
                 map.put("user",user);
                 result.add(map);
             }
         }
         model.addAttribute("discussPosts",result);
         return "/index";
+    }
+    private String getInterval(Date time){
+        Date now = new Date();
+        String result = "";
+        long diff = now.getTime() - time.getTime();
+        diff /= 1000;
+        if(diff < 60){
+            return diff + "秒前";
+        }else if(diff < 60 * 60){
+            return (diff / 60) + "分钟前";
+        }else if(diff < 60 * 60 * 24){
+            return (diff / (60*60)) + "小时前";
+        }else {
+            return (diff / (60*60 * 24)) + "天前";
+        }
     }
 
     @PostMapping("/discuss/add")
@@ -115,52 +135,7 @@ public class DiscussPostController implements CommunityConstant {
         //评论列表
         List<Comment> commentList = commentService.findCommentByEntity(ENTITY_TYPE_POST,
                 postDetail.getId(), page.getOffset(), page.getLimit());
-        List<Map<String,Object>> commentVOList = new ArrayList<>();
-        if(commentList != null){
-            for(Comment comment: commentList){
-                //评论VO
-                Map<String,Object> commentVO = new HashMap<>();
-                //评论
-                commentVO.put("comment",comment);
-                //作者
-                commentVO.put("user",userService.findUserById(comment.getUserId()));
-                //评论帖子点赞数量和状态
-                int commentStatus = user == null?
-                        0: likeServer.findUserLikeStatus(user.getId(), ENTITY_TYPE_COMMENT, comment.getId());
-                long commentLikeCount = likeServer.findEntityLikeCount(ENTITY_TYPE_COMMENT, comment.getId());
-                commentVO.put("likeCount",commentLikeCount);
-                commentVO.put("likeStatus",commentStatus);
-                //回复列表
-                List<Comment> replayList = commentService.findCommentByEntity(ENTITY_TYPE_COMMENT,
-                        comment.getId(), 0, Integer.MAX_VALUE);
-                List<Map<String,Object>> replayVOList = new ArrayList<>();
-                if(replayList != null){
-                    for(Comment replay : replayList){
-                        //回复VO
-                        Map<String,Object> replayVO = new HashMap<>();
-                        //回复
-                        replayVO.put("replay",replay);
-                        //作者
-                        replayVO.put("user",userService.findUserById(replay.getUserId()));
-                        //回复帖子点赞数量和状态
-                        int replayStatus = user == null?
-                                0: likeServer.findUserLikeStatus(user.getId(), ENTITY_TYPE_COMMENT, replay.getId());
-                        long replayLikeCount = likeServer.findEntityLikeCount(ENTITY_TYPE_COMMENT, replay.getId());
-                        replayVO.put("likeCount",replayLikeCount);
-                        replayVO.put("likeStatus",replayStatus);
-                        //回复目标
-                        User targetUser = replay.getTargetId() == 0 ? null : userService.findUserById(replay.getTargetId());
-                        replayVO.put("target",targetUser);
-                        replayVOList.add(replayVO);
-                    }
-                }
-                commentVO.put("replays",replayVOList);
-                //回复数量
-                int replayCount = commentService.findCommentCount(ENTITY_TYPE_COMMENT, comment.getId());
-                commentVO.put("replayCount",replayCount);
-                commentVOList.add(commentVO);
-            }
-        }
+        List<Map<String, Object>> commentVOList = commonMethod.commentsAndReplays(commentList, user);
         model.addAttribute("comments",commentVOList);
         return "/site/discuss-detail";
     }

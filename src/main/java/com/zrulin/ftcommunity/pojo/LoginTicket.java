@@ -10,7 +10,6 @@ import java.util.Date;
  * @create 2022-03-12 9:49
  */
 @Data
-@ToString
 public class LoginTicket {
     private Integer id;
     private Integer userId;

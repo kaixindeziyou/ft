@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="icon" th:href="@{/user/header/header.jpeg}"/>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" crossorigin="anonymous">
+	<link rel="stylesheet" th:href="@{/css/global.css}" />
+	<link rel="stylesheet" th:href="@{/css/discuss-detail.css}" />
+	<title>FTCommunity-帖子详情</title>
+	<style>
+		.detail{
+			height: 300px;
+			width: 920px;
+		}
+		.photo{
+			height: 300px;
+			width: 500px;
+		}
+		.activity_img{
+			height: 250px;
+			width: 444px;
+		}
+		.img-1{
+			height: 25px;
+			width: 24px;
+		}
+	</style>
+</head>
+<body>
+	<div class="nk-container">
+		<!-- 头部 -->
+		<header class="bg-dark sticky-top" th:replace="index::ftHeader">
+		</header>
+
+		<!-- 内容 -->
+		<div class="main">
+			<!-- 帖子详情 -->
+			<div class="container">
+				<!-- 标题 -->
+				<h6 class="mb-4">
+					<img class="img-1" th:src="@{/image/userphoto/header.jpeg}"/>
+					<span th:utext="${activity.title}">备战春招，面试刷题跟他复习，一个月全搞定！</span>
+					<div class="float-right">
+					</div>
+				</h6>
+				<!-- 作者 -->
+				<div class="media pb-3 border-bottom detail">
+					<a class="photo" href="#">
+						<img th:src="${activity.photo}" class="align-self-start mr-4 activity_img" alt="用户头像" >
+					</a>
+					<div class="media-body">
+						<br><br><br>
+						<div class="mt-0 text-warning" >发布方：<b th:utext="${activity.issuer}"></b></div>
+						<div class="text-muted mt-3">
+							报名开始时间： <b th:text="${#dates.format(activity.startTime,'yyyy-MM-dd HH:mm:ss')}">2019-04-15 15:32:18</b>
+						</div>
+						<div class="text-muted mt-3">
+							报名截止时间 <b th:text="${#dates.format(activity.endTime,'yyyy-MM-dd HH:mm:ss')}">2019-04-15 15:32:18</b>
+						</div>
+						<div class="text-muted mt-3">
+							官方邮箱： <b th:text="${activity.email}"></b>
+						</div>
+					</div>
+				</div>	
+				<!-- 正文 -->
+				<div class="mt-4 mb-3 content" th:utext="${activity.content}">
+				</div>
+			</div>
+			<!-- 回帖 -->
+			<div class="container mt-3">
+				<!-- 回帖数量 -->
+				<div class="row">
+					<div class="col-8">
+						<h6><b class="square"></b> <i th:text="${activity.commentCount}">30</i>条回帖</h6>
+					</div>
+					<div class="col-4 text-right">
+						<a href="#replyform" class="btn btn-primary btn-sm">&nbsp;&nbsp;回&nbsp;&nbsp;帖&nbsp;&nbsp;</a>
+					</div>
+				</div>
+				<!-- 回帖列表 -->
+				<ul class="list-unstyled mt-4">
+					<li class="media pb-3 pt-3 mb-3 border-bottom" th:each="cvo:${comments}">
+						<a th:href="@{|/user/profile/${cvo.user.id}|}">
+							<img th:src="${cvo.user.headerUrl}" class="align-self-start mr-4 rounded-circle user-header" alt="用户头像" >
+						</a>
+						<div class="media-body">
+							<div class="mt-0">
+								<span class="font-size-12 text-success" th:utext="${cvo.user.username}">Nikeless</span>
+								<span class="badge badge-secondary float-right floor">
+									<i th:text="${page.offset + cvoStat.count}">1</i>#
+								</span>
+							</div>
+							<div class="mt-2" th:utext="${cvo.comment.content}">
+								强烈支持!!!
+							</div>
+							<div class="mt-4 text-muted font-size-12">
+								<span>发布于 <b th:text="${#dates.format(cvo.comment.createTime,'yyyy-MM-dd HH:mm:ss')}">2019-04-15 15:32:18</b></span>
+								<ul class="d-inline float-right">
+									<li class="d-inline ml-2">
+										<a href="javascript:;" th:onclick="|like(this,2,${cvo.comment.id},${cvo.user.id});|" class="text-primary">
+											<b th:text="${cvo.likeStatus==1?'已赞':'赞'}">赞</b>(<i  th:text="${cvo.likeCount}">1</i>)
+										</a>
+									</li>
+									<li class="d-inline ml-2">|</li>
+									<li class="d-inline ml-2"><a href="#" class="text-primary">回复(<span th:text="${cvo.replayCount}">2</span>)</a></li>
+								</ul>
+							</div>
+							<!-- 回复列表 -->
+							<ul class="list-unstyled mt-4 bg-gray p-3 font-size-12 text-muted">
+								<li class="pb-3 pt-3 mb-3 border-bottom" th:each="rvo:${cvo.replays}">
+									<div>
+										<span th:if="${rvo.target!=null}">
+											<i class="text-info" th:text="${rvo.user.username}">Sissi</i> 回复
+											<b class="text-info" th:text="${rvo.target.username}">寒江雪</b>:&nbsp;&nbsp;
+										</span>
+										<span th:if="${rvo.target==null}">
+											<b class="text-info" th:text="${rvo.user.username}">寒江雪</b>:&nbsp;&nbsp;
+										</span>
+										<span th:utext="${rvo.replay.content}">怎么买录播课程呢</span>
+									</div>
+									<div class="mt-3">
+										<span th:text="${#dates.format(rvo.replay.createTime,'yyyy-MM-dd HH:mm:ss')}">2019-04-15 15:32:18</span>
+										<ul class="d-inline float-right">
+											<li class="d-inline ml-2">
+												<a href="javascript:;" th:onclick="|like(this,2,${rvo.replay.id},${rvo.user.id});|" class="text-primary">
+													<b th:text="${rvo.likeStatus==1?'已赞':'赞'}">赞</b>(<i  th:text="${rvo.likeCount}">1</i>)
+												</a>
+											</li>
+											<li class="d-inline ml-2">|</li>
+											<li class="d-inline ml-2"><a th:href="|#huifu-${rvoStat.count}|" data-toggle="collapse" class="text-primary">回复</a></li>
+										</ul>
+										<div th:id="|huifu-${rvoStat.count}|" class="mt-4 collapse">
+											<form method="post" th:action="@{|/comment/activityAdd/${activity.id}|}">
+												<div>
+													<input type="text" name="content" class="input-size" th:placeholder="|回复${rvo.user.username}|" />
+													<input type="hidden" name="entityType" value="2">
+													<input type="hidden" name="entityId" th:value="${cvo.comment.id}">
+													<input type="hidden" name="targetId" th:value="${rvo.user.id}">
+												</div>
+												<div class="text-right mt-2">
+													<button type="submit" class="btn btn-primary btn-sm" onclick="#">&nbsp;&nbsp;回&nbsp;&nbsp;复&nbsp;&nbsp;</button>
+												</div>
+											</form>
+										</div>
+									</div>
+								</li>
+								<!-- 回复输入框 -->
+								<li class="pb-3 pt-3">
+									<form  method="post" th:action="@{|/comment/activityAdd/${activity.id}|}" >
+										<div>
+											<input type="text" class="input-size" name="content" placeholder="请输入你的观点"/>
+											<input type="hidden" name="entityType" value="2">
+											<input type="hidden" name="entityId" th:value="${cvo.comment.id}">
+											<input type="hidden" name="targetId" value="0">
+										</div>
+										<div class="text-right mt-2">
+											<button type="submit" class="btn btn-primary btn-sm" onclick="#">&nbsp;&nbsp;回&nbsp;&nbsp;复&nbsp;&nbsp;</button>
+										</div>
+									</form>
+								</li>
+							</ul>
+						</div>
+					</li>									
+				</ul>
+				<!-- 分页 -->
+				<nav class="mt-5">
+					<ul class="pagination justify-content-center" th:replace="index::pagination">
+					</ul>
+				</nav>			
+			</div>
+			<!-- 回帖输入 -->
+			<div class="container mt-3">
+				<form class="replyform" method="post" th:action="@{|/comment/activityAdd/${activity.id}|}">
+					<p class="mt-3">
+						<a name="replyform"></a>
+						<textarea placeholder="在这里畅所欲言你的看法吧!" name="content"></textarea>
+						<input type="hidden" name="entityType" value="4">
+						<input type="hidden" name="entityId" th:value="${activity.id}">
+						<input type="hidden" name="targetId" value="0">
+					</p>
+					<p class="text-right">
+						<button type="submit" class="btn btn-primary btn-sm">&nbsp;&nbsp;回&nbsp;&nbsp;帖&nbsp;&nbsp;</button>
+					</p>
+				</form>
+			</div>
+		</div>
+
+		<!-- 尾部 -->
+		<footer class="bg-dark" th:replace="index::footer">
+		</footer>
+	</div>
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" crossorigin="anonymous"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" crossorigin="anonymous"></script>
+	<script th:src="@{/js/global.js}"></script>
+	<script th:src="@{/js/discuss.js}"></script>
+</body>
+</html>

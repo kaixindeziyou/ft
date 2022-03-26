@@ -10,7 +10,6 @@ import java.util.Date;
  * @create 2022-03-18 8:04
  */
 @Data
-@ToString
 public class Message {
     private Integer id;
     private Integer fromId;

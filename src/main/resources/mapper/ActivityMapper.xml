@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zrulin.ftcommunity.dao.ActivityMapper">
+    <sql id="selectActivity">
+        id,issuer,start_time,end_time,title,content,photo,email,create_time,status,comment_count
+    </sql>
+    <sql id="insertActivity">
+        issuer,start_time,end_time,title,content,photo,email,create_time,status,comment_count
+    </sql>
+    <select id="selectActivity" resultType="Activity">
+        select <include refid="selectActivity"></include>
+        from activity
+        where status = 1
+        order by create_time desc
+        limit #{offset},#{limit}
+    </select>
+    <select id="selectActivityRows" resultType="int">
+        select count(id)
+        from activity
+        where status = 1
+    </select>
+    <select id="selectActivityById" resultType="Activity">
+        select <include refid="selectActivity"></include>
+        from activity
+        where status = 1
+          and id = #{activityId}
+    </select>
+    <update id="updateCommentCount">
+        update activity set comment_count = #{commentCount} where id = #{activityId}
+    </update>
+    <insert id="insertActivity" parameterType="Activity" keyProperty="id">
+        insert into activity (<include refid="insertActivity"></include>)
+        values (#{issuer},#{startTime},#{endTime},#{title},#{content},#{photo},#{email},#{createTime},#{status},#{commentCount})
+    </insert>
+</mapper>

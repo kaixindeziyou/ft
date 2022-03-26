@@ -10,7 +10,6 @@ import java.util.Date;
  * @create 2022-03-09 16:56
  */
 @Data
-@ToString
 public class DiscussPost {
     private Integer id;
     //显示的时候肯定不会显示userId，坑定会显示名称，两种办法：

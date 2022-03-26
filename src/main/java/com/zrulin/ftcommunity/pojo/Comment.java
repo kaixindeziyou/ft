@@ -10,7 +10,6 @@ import java.util.Date;
  * @create 2022-03-15 17:47
  */
 @Data
-@ToString
 public class Comment {
     private Integer id;
     private Integer userId;
