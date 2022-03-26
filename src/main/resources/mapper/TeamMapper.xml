@@ -6,6 +6,9 @@
     <sql id="selectTeam">
         id,name,end_time,user_id,email,need_person,person,introduce,activity_name,create_time,status
     </sql>
+    <sql id="insertTeam">
+        name,end_time,user_id,email,need_person,person,introduce,activity_name,create_time,status
+    </sql>
 
     <select id="selectTeams" resultType="Team">
         select <include refid="selectTeam"></include>
@@ -24,4 +27,21 @@
         from team
         where status = 1 and id = #{teamId}
     </select>
+    <insert id="insertMember" parameterType="Member" keyProperty="id">
+        insert into members (team_id,user_id,type,status)
+        values (#{teamId},#{userId},#{type},#{status})
+    </insert>
+    <select id="selectMember" resultType="Member">
+        select id,team_id,user_id,type,status
+        from members
+        where user_id = #{userId} and team_id = #{teamId}
+    </select>
+    <update id="updateMemberStatus" >
+        update members set status = #{status}
+        where user_id = #{userId} and team_id = #{teamId}
+    </update>
+    <insert id="insertTeam" parameterType="Team" keyProperty="id">
+        insert into team (<include refid="insertTeam"></include>)
+        values (#{name},#{endTime},#{userId},#{email},#{needPerson},#{person},#{introduce},#{activityName},#{createTime},#{status})
+    </insert>
 </mapper>

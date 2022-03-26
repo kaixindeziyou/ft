@@ -19,6 +19,6 @@ public class Team {
     private Integer person;
     private String introduce;
     private String activityName;
-    private String createTime;
+    private Date createTime;
     private Integer status;
 }

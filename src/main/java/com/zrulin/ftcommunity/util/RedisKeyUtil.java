@@ -29,6 +29,8 @@ public class RedisKeyUtil {
     //用来处理缓存常用的用户数据
     private static final String PREFIX_USER = "user";
 
+    private static final String PREFIX_TEAM_MEMBER = "team";
+
 
     /**
      * 生成某个实体的赞的key
@@ -86,5 +88,10 @@ public class RedisKeyUtil {
     // 缓存常用的用户
     public static String getCommonUserKey(int userId){
         return PREFIX_USER + SPLIT + userId;
+    }
+
+    // 缓存队员状态
+    public static String getMemberStatus(int userId, int teamId){
+        return PREFIX_TEAM_MEMBER + SPLIT + teamId + SPLIT + userId;
     }
 }

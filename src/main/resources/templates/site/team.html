@@ -39,7 +39,7 @@
 					<div class="modal-dialog modal-lg" role="document">
 						<div class="modal-content">
 							<div class="modal-header">
-								<h5 class="modal-title" id="publishModalLabel">新帖发布</h5>
+								<h5 class="modal-title" id="publishModalLabel">队伍创建</h5>
 								<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 									<span aria-hidden="true">&times;</span>
 								</button>
@@ -47,18 +47,30 @@
 							<div class="modal-body">
 								<form>
 									<div class="form-group">
-										<label for="recipient-name" class="col-form-label">标题：</label>
+										<label for="recipient-name" class="col-form-label">队伍名称：</label>
 										<input type="text" class="form-control" id="recipient-name">
 									</div>
 									<div class="form-group">
-										<label for="message-text" class="col-form-label">正文：</label>
+										<label for="message-text" class="col-form-label">队伍介绍：</label>
 										<textarea class="form-control" id="message-text" rows="15"></textarea>
+									</div>
+									<div class="form-group">
+										<label for="recipient-name" class="col-form-label">筹备的比赛：</label>
+										<input type="text" class="form-control" id="activity">
+									</div>
+									<div class="form-group">
+										<label for="recipient-name" class="col-form-label">所需队员人数：</label>
+										<input type="text" class="form-control" id="person">
+									</div>
+									<div class="form-group">
+										<label for="endTime">队伍截止加入时间：</label>
+										<input type="date"  id="endTime" value="" />
 									</div>
 								</form>
 							</div>
 							<div class="modal-footer">
 								<button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
-								<button type="button" class="btn btn-primary" id="publishBtn">发布</button>
+								<button type="button" class="btn btn-primary" id="publishBtn">提交申请</button>
 							</div>
 						</div>
 					</div>
@@ -77,15 +89,15 @@
 					</div>
 				</div>
 				
-				<!-- 帖子列表 -->
+				<!-- 队伍详情 -->
 				<ul class="list-unstyled">
 					<li class="media pb-3 pt-3 mb-3 border-bottom" th:each="map:${result}">
-						<a href="#">
+						<a th:href="@{|/team/detail/${map.team.id}|}">
 							<img th:src="@{/image/02.jpg}" class="mr-4 rounded-circle" alt="用户头像" style="width:50px;height:50px;">
 						</a>
 						<div class="media-body">
 							<h6 class="mt-0 mb-3">
-								<a href="#" th:utext="${map.team.name}"></a>
+								<a th:href="@{|/team/detail/${map.team.id}|}" th:utext="${map.team.name}"></a>
 								<span class="badge badge-secondary bg-primary" th:if="${map.team.person-map.team.needPerson==0}">已满员</span>
 								<span class="badge badge-secondary bg-danger" th:if="${map.team.person-map.team.needPerson!=0}">筹募中</span>
 							</h6>
@@ -116,6 +128,7 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" crossorigin="anonymous"></script>
 	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" crossorigin="anonymous"></script>
 	<script th:src="@{/js/global.js}"></script>
-	<script th:src="@{js/index.js}"></script>
+	<script th:src="@{/js/team.js}"></script>
+
 </body>
 </html>
