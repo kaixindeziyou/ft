@@ -168,6 +168,7 @@ public class LoginController implements CommunityConstant {
                         String password,
                         String code,
                         Boolean rememberme,
+                        Integer power,
                         /*HttpSession session,*/
                         @CookieValue("kaptchaOwner") String kaptchaOwner,
                         HttpServletResponse response

@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en" xmlnx:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="icon" th:href="@{/user/header/header.jpeg}"/>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" crossorigin="anonymous">
+	<link rel="stylesheet" th:href="@{/css/global.css}" />
+	<title>FTCommunity</title>
+</head>
+<body>	
+	<div class="nk-container">
+		<!-- 头部 -->
+		<header class="bg-dark sticky-top" th:replace="index::ftHeader">
+
+		</header>
+
+		<!-- 内容 -->
+		<div class="main">
+			<div class="container">
+				<div class="position-relative">
+					<!-- 筛选条件 -->
+					<ul class="nav nav-tabs mb-3">
+						<li class="nav-item">
+							<a class="nav-link" th:href="@{/index}">话题讨论</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" th:href="@{/activity/list}">竞赛大厅</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link active" th:href="@{/team/list}">队伍招募</a>
+						</li>
+					</ul>
+					<button  type="button" class="btn btn-primary btn-sm position-absolute rt-0"
+							 data-toggle="modal" data-target="#publishModal" th:if="${loginUser!=null}">创建队伍</button>
+				</div>
+				<!-- 弹出框 -->
+				<div class="modal fade" id="publishModal" tabindex="-1" role="dialog" aria-labelledby="publishModalLabel" aria-hidden="true">
+					<div class="modal-dialog modal-lg" role="document">
+						<div class="modal-content">
+							<div class="modal-header">
+								<h5 class="modal-title" id="publishModalLabel">新帖发布</h5>
+								<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+									<span aria-hidden="true">&times;</span>
+								</button>
+							</div>
+							<div class="modal-body">
+								<form>
+									<div class="form-group">
+										<label for="recipient-name" class="col-form-label">标题：</label>
+										<input type="text" class="form-control" id="recipient-name">
+									</div>
+									<div class="form-group">
+										<label for="message-text" class="col-form-label">正文：</label>
+										<textarea class="form-control" id="message-text" rows="15"></textarea>
+									</div>
+								</form>
+							</div>
+							<div class="modal-footer">
+								<button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+								<button type="button" class="btn btn-primary" id="publishBtn">发布</button>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- 提示框 -->
+				<div class="modal fade" id="hintModal" tabindex="-1" role="dialog" aria-labelledby="hintModalLabel" aria-hidden="true">
+					<div class="modal-dialog modal-lg" role="document">
+						<div class="modal-content">
+							<div class="modal-header">
+								<h5 class="modal-title" id="hintModalLabel">提示</h5>
+							</div>
+							<div class="modal-body" id="hintBody">
+								发布完毕!
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<!-- 帖子列表 -->
+				<ul class="list-unstyled">
+					<li class="media pb-3 pt-3 mb-3 border-bottom" th:each="map:${result}">
+						<a href="#">
+							<img th:src="@{/image/02.jpg}" class="mr-4 rounded-circle" alt="用户头像" style="width:50px;height:50px;">
+						</a>
+						<div class="media-body">
+							<h6 class="mt-0 mb-3">
+								<a href="#" th:utext="${map.team.name}"></a>
+								<span class="badge badge-secondary bg-primary" th:if="${map.team.person-map.team.needPerson==0}">已满员</span>
+								<span class="badge badge-secondary bg-danger" th:if="${map.team.person-map.team.needPerson!=0}">筹募中</span>
+							</h6>
+							<div class="text-muted font-size-12">
+								队长：<u class="mr-3" th:text="${map.user.username}"></u><br>
+								筹募比赛：<b th:text="${map.team.activityName}"></b><br>
+								筹募结束于：<b th:text="${#dates.format(map.team.endTime,'yyyy-MM-dd HH:mm:ss')}"></b><br>
+								现有队员：<b th:text="${map.team.person}"></b>人&nbsp;&nbsp;&nbsp;
+								还需队员：<b th:text="${map.team.needPerson-map.team.person}"></b>人
+								<ul class="d-inline float-right">
+								</ul>
+							</div>
+						</div>
+					</li>
+				</ul>
+				<!-- 分页 -->
+				<nav class="mt-5" th:replace="index::pagination">
+				</nav>
+			</div>
+		</div>
+
+		<!-- 尾部 -->
+		<footer class="bg-dark" th:replace="index::footer">
+		</footer>
+	</div>
+
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" crossorigin="anonymous"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" crossorigin="anonymous"></script>
+	<script th:src="@{/js/global.js}"></script>
+	<script th:src="@{js/index.js}"></script>
+</body>
+</html>

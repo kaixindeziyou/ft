@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zrulin.ftcommunity.dao.TeamMapper">
+    <sql id="selectTeam">
+        id,name,end_time,user_id,email,need_person,person,introduce,activity_name,create_time,status
+    </sql>
+
+    <select id="selectTeams" resultType="Team">
+        select <include refid="selectTeam"></include>
+        from team
+        where status = 1
+        order by create_time desc
+        limit #{offset},#{limit}
+    </select>
+    <select id="selectTeamRows" resultType="int">
+        select count(id)
+        from team
+        where status = 1
+    </select>
+    <select id="selectTeamById" resultType="Team">
+        select<include refid="selectTeam"></include>
+        from team
+        where status = 1 and id = #{teamId}
+    </select>
+</mapper>
