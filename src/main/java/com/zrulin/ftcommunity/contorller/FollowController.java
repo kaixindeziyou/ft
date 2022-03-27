@@ -3,6 +3,8 @@ package com.zrulin.ftcommunity.contorller;
 import com.sun.jmx.snmp.daemon.CommunicatorServerMBean;
 import com.sun.org.apache.xpath.internal.operations.Mod;
 import com.zrulin.ftcommunity.annotation.LoginRequired;
+import com.zrulin.ftcommunity.event.EventProduce;
+import com.zrulin.ftcommunity.pojo.Event;
 import com.zrulin.ftcommunity.pojo.Page;
 import com.zrulin.ftcommunity.pojo.User;
 import com.zrulin.ftcommunity.service.FollowService;
@@ -34,11 +36,24 @@ public class FollowController implements CommunityConstant {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private EventProduce eventProduce;
+
     @LoginRequired
     @PostMapping("/follow")
     @ResponseBody
     public String follow(int entityType, int entityId){
         followService.follow(hostHolder.getUser().getId(),entityType,entityId);
+
+        //触发系统通知
+        Event event = new Event()
+                .setTopic(TOPIC_FOLLOW)
+                .setUserId(hostHolder.getUser().getId())
+                .setEntityType(entityType)
+                .setEntityId(entityId)
+                .setEntityUserId(entityId);
+        eventProduce.fireEvent(event);
+
         return CommunityUtil.getJsonString(0,"已关注");
     }
     @LoginRequired

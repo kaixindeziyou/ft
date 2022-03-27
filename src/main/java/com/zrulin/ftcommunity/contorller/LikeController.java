@@ -1,7 +1,10 @@
 package com.zrulin.ftcommunity.contorller;
 
 import com.zrulin.ftcommunity.annotation.LoginRequired;
+import com.zrulin.ftcommunity.event.EventProduce;
+import com.zrulin.ftcommunity.pojo.Event;
 import com.zrulin.ftcommunity.service.LikeServer;
+import com.zrulin.ftcommunity.util.CommunityConstant;
 import com.zrulin.ftcommunity.util.CommunityUtil;
 import com.zrulin.ftcommunity.util.HostHolder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,12 +20,15 @@ import java.util.Map;
  */
 @Controller
 @RequestMapping("/like")
-public class LikeController {
+public class LikeController implements CommunityConstant {
     @Autowired
     private LikeServer likeServer;
 
     @Autowired
     private HostHolder hostHolder;
+
+    @Autowired
+    private EventProduce eventProduce;
 
     @LoginRequired
     @PostMapping("/click")
@@ -30,8 +36,11 @@ public class LikeController {
     public String like(
             int entityType,
             int entityId,
-            int entityUserId){
+            int entityUserId,
+            int postId){
+        //点赞
         likeServer.like(hostHolder.getUser().getId(),entityType,entityId,entityUserId);
+
         //点赞数量
         long entityLikeCount = likeServer.findEntityLikeCount(entityType, entityId);
         //点赞状态
@@ -40,6 +49,19 @@ public class LikeController {
         Map<String, Object> map = new HashMap<>();
         map.put("likeCount",entityLikeCount);
         map.put("status",status);
+
+        //触发系统通知
+        if(status == 1){
+            Event event = new Event()
+                    .setTopic(TOPIC_Like)
+                    .setUserId(hostHolder.getUser().getId())
+                    .setEntityId(entityId)
+                    .setEntityType(entityType)
+                    .setEntityUserId(entityUserId)
+                    .setMap("postId",postId);
+            eventProduce.fireEvent(event);
+        }
+
         return CommunityUtil.getJsonString(0,"成功",map);
     }
 }

@@ -1397,6 +1397,157 @@ public  void testTransaction(){
       }
       ```
 
-      
 
-    
+
+
+## 发送系统通知
+
+![image-20220327202039442](img/image-20220327202039442.png) 
+
+从技术上的角度来说这是三个主题，利用kafka消息队列，发布消息
+
+从业务上来说，这就是三个事件。
+
+- 触发事件
+
+  - 评论后，发布通知
+  - 点赞后，发布通知
+  - 关注后，发布通知
+
+- 处理事件
+
+  - 封装事件对象
+
+    - 处理了以下get/set方法，便于封装数据
+
+    - ```java
+      public class Event {
+          private String topic;
+          private Integer userId;
+          private Integer entityType;
+          private Integer entityId;
+          private Integer entityUserId;
+          private Map<String, Object> map = new HashMap<>();
+      
+          public String getTopic() {
+              return topic;
+          }
+      
+          public Event setTopic(String topic) {
+              this.topic = topic;
+              return this;
+          }
+      
+          public Integer getUserId() {
+              return userId;
+          }
+      
+          public Event setUserId(Integer userId) {
+              this.userId = userId;
+              return this;
+          }
+      
+          public Integer getEntityType() {
+              return entityType;
+          }
+      
+          public Event setEntityType(Integer entityType) {
+              this.entityType = entityType;
+              return this;
+          }
+      
+          public Integer getEntityId() {
+              return entityId;
+          }
+      
+          public Event setEntityId(Integer entityId) {
+              this.entityId = entityId;
+              return this;
+          }
+      
+          public Integer getEntityUserId() {
+              return entityUserId;
+          }
+      
+          public Event setEntityUserId(Integer entityUserId) {
+              this.entityUserId = entityUserId;
+              return this;
+          }
+      
+          public Map<String, Object> getMap() {
+              return map;
+          }
+      
+          public Event setMap(String key, Object value) {
+              this.map.put(key,value);
+              return this;
+          }
+      }
+      ```
+
+  - 开发事件的生产者
+
+    - ```java
+      @Component
+      public class EventProduce {
+      
+          @Autowired
+          private KafkaTemplate kafkaTemplate;
+      
+          public void fireEvent(Event event){
+              kafkaTemplate.send(event.getTopic(), JSONObject.toJSONString(event));
+          }
+      }
+      ```
+
+  - 开发事件的消费者
+
+    - ```java
+      @Component
+      public class EventConsumer implements CommunityConstant {
+      
+          private static final Logger logger = LoggerFactory.getLogger(EventConsumer.class);
+      
+          @Autowired
+          private MessageService messageService;
+      
+          @KafkaListener(topics = {TOPIC_Like,TOPIC_COMMENT,TOPIC_FOLLOW})
+          public void handelCommentMessage(ConsumerRecord record){
+              if(record == null || record.value() == null){
+                  logger.error("订阅的消息内容为空");
+                  return;
+              }
+              Event event = JSONObject.parseObject(record.value().toString(), Event.class);
+              if(event == null){
+                  logger.error("订阅的消息格式错误！");
+                  return;
+              }
+      
+              //发送站内通知,构造message对象，复用表。
+              Message message = new Message();
+              message.setFromId(SYSTEM_USER_ID);
+              message.setToId(event.getUserId());
+              message.setConversationId(event.getTopic());
+              message.setStatus(0);
+              message.setCreateTime(new Date());
+      
+              Map<String, Object> content = new HashMap<>();
+              content.put("userId",event.getUserId());
+              content.put("entityType",event.getEntityType());
+              content.put("entityId",event.getEntityId());
+      
+              if(!event.getMap().isEmpty()){
+                  for(Map.Entry<String, Object> map : event.getMap().entrySet()){
+                      content.put(map.getKey(),map.getValue());
+                  }
+              }
+              message.setContent(JSONObject.toJSONString(content));
+              messageService.addMessage(message);
+          }
+      }
+      ```
+
+每次有事件触发的时候，就会触发event。
+
+封装一个相应的系统通知对象到数据库。一个订阅这些事件的消费者自动进行封装。触发事件的线程可以去做自己的事情，不用管了。
+

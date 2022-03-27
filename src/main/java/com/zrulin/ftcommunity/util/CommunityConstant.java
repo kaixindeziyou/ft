@@ -45,5 +45,21 @@ public interface CommunityConstant {
      * 实体类型：比赛
      */
     int ENTITY_TYPE_ACTIVITY=4;
+    /**
+     * 主题 ： 点赞
+     */
+    String TOPIC_Like = "like";
+    /**
+     * 主题 ： 点赞
+     */
+    String TOPIC_COMMENT = "comment";
+    /**
+     * 主题 ： 点赞
+     */
+    String TOPIC_FOLLOW = "follow";
+    /**
+     * 系统通知id
+     */
+    int SYSTEM_USER_ID = 1;
 
 }

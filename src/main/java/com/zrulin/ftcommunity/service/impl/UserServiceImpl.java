@@ -1,6 +1,5 @@
 package com.zrulin.ftcommunity.service.impl;
 
-import com.zrulin.ftcommunity.dao.LoginTicketMapper;
 import com.zrulin.ftcommunity.dao.UserMapper;
 import com.zrulin.ftcommunity.pojo.LoginTicket;
 import com.zrulin.ftcommunity.pojo.User;

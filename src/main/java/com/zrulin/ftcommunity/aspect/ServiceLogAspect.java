@@ -36,6 +36,9 @@ public class ServiceLogAspect {
         // 要记录这样格式的日志，首先用户的ip可以用request获取，在这个里面获取request不能简单的参数里面获取，用一个工具类RequestContextHolder、
         //返回的默认类型是RequestAttributes，这里把他转为子类型ServletRequestAttributes，功能多一点
          ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+         if(attributes == null){
+             return;//后面增加的kafka消费者调用service层，而不是controller调用，不是请求,获取不到request
+         }
          HttpServletRequest request = attributes.getRequest();//获得request对象
          String ip = request.getRemoteHost();//获得用户ip
          String now = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());

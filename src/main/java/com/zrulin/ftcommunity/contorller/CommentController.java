@@ -1,8 +1,12 @@
 package com.zrulin.ftcommunity.contorller;
 
 import com.zrulin.ftcommunity.annotation.LoginRequired;
-import com.zrulin.ftcommunity.pojo.Comment;
+import com.zrulin.ftcommunity.event.EventProduce;
+import com.zrulin.ftcommunity.pojo.*;
+import com.zrulin.ftcommunity.service.ActivityService;
 import com.zrulin.ftcommunity.service.CommentService;
+import com.zrulin.ftcommunity.service.DiscussPostService;
+import com.zrulin.ftcommunity.service.UserService;
 import com.zrulin.ftcommunity.util.CommunityConstant;
 import com.zrulin.ftcommunity.util.HostHolder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,27 +31,68 @@ public class CommentController implements CommunityConstant {
     @Autowired
     private CommentService commentService;
 
+    @Autowired
+    private DiscussPostService discussPostService;
+
+    @Autowired
+    private EventProduce eventProduce;
+
+    @Autowired
+    private ActivityService activityService;
+
+    @Autowired
+    private UserService userService;
+
+    // 话题评论
     @LoginRequired
     @PostMapping("/add/{discussPostId}")
     public String addComment(
             @PathVariable("discussPostId") int discussPostId,
             Comment comment
     ){
+        //增加评论记录
         comment.setUserId(hostHolder.getUser().getId());
         comment.setStatus(0);
         comment.setCreateTime(new Date());
         commentService.addComment(comment);
+        //触发系统通知
+        eventStart(comment,discussPostId,hostHolder.getUser().getId());
         return "redirect:/discuss/detail/" + discussPostId;
     }
+    //活动评论
     @PostMapping("/activityAdd/{activityId}")
     public String activityAddComment(
             @PathVariable("activityId") int activityId,
             Comment comment
     ){
+        //增加评论记录
         comment.setUserId(hostHolder.getUser().getId());
         comment.setStatus(0);
         comment.setCreateTime(new Date());
         commentService.addComment(comment);
+        eventStart(comment,activityId,hostHolder.getUser().getId());
         return "redirect:/activity/detail/" + activityId;
+    }
+
+    private void eventStart(Comment comment, int id,int userId){
+        //触发系统通知
+        Event event = new Event();
+        event.setTopic(TOPIC_COMMENT)
+                .setUserId(userId)
+                .setEntityUserId(comment.getEntityId())
+                .setEntityType(comment.getEntityType())
+                .setMap("postId",id);
+        if(comment.getEntityType() == ENTITY_TYPE_POST){
+            DiscussPost post = discussPostService.findPostDetail(comment.getEntityId());
+            event.setEntityUserId(post.getUserId());
+        }else if(comment.getEntityType() == ENTITY_TYPE_COMMENT){
+            Comment target = commentService.findCommentById(comment.getEntityId());
+            event.setEntityUserId(target.getUserId());
+        }else if(comment.getEntityType() == ENTITY_TYPE_ACTIVITY){
+            Activity activity = activityService.findActivityById(comment.getEntityId());
+            User user = userService.findUserByUsername(activity.getIssuer());
+            event.setEntityUserId(user.getId());
+        }
+        eventProduce.fireEvent(event);
     }
 }
