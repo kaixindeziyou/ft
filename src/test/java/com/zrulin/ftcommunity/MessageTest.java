@@ -59,4 +59,9 @@ public class MessageTest {
         message.setCreateTime(new Date());
         messageMapper.insertMessage(message);
     }
+
+    @Test
+    public void test5(){
+
+    }
 }

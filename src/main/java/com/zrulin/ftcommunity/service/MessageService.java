@@ -62,4 +62,45 @@ public interface MessageService {
      * @return  返回的整数表示影响的行数
      */
     public int updateMessagesStatus(List<Integer> ids);
+
+    /**
+     * 某个主题最新的通知
+     * @param userId
+     * @param topic
+     * @return
+     */
+    public Message findLatestNotice(int userId, String topic);
+
+    /**
+     * 某个主题的消息数量
+     * @param userId
+     * @param topic
+     * @return
+     */
+    public int findNoticeCount(int userId, String topic);
+
+    /**
+     * （某个主题）的未读通知数量
+     * @param userId
+     * @param topic
+     * @return
+     */
+    public int findNoticeUnreadCount(int userId, String topic);
+
+    /**
+     * 查询所有未读消息数量
+     * @param userId
+     * @return
+     */
+    public int findAllUnread(int userId);
+
+    /**
+     * 根据主题查找系统通知列表
+     * @param userId
+     * @param topic
+     * @param offset
+     * @param limit
+     * @return
+     */
+    public List<Message> findNotices(int userId, String topic, int offset, int limit);
 }

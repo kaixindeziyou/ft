@@ -4,10 +4,7 @@ import com.zrulin.ftcommunity.pojo.Comment;
 import com.zrulin.ftcommunity.pojo.DiscussPost;
 import com.zrulin.ftcommunity.pojo.Page;
 import com.zrulin.ftcommunity.pojo.User;
-import com.zrulin.ftcommunity.service.CommentService;
-import com.zrulin.ftcommunity.service.DiscussPostService;
-import com.zrulin.ftcommunity.service.LikeServer;
-import com.zrulin.ftcommunity.service.UserService;
+import com.zrulin.ftcommunity.service.*;
 import com.zrulin.ftcommunity.util.CommonMethod;
 import com.zrulin.ftcommunity.util.CommunityConstant;
 import com.zrulin.ftcommunity.util.CommunityUtil;
@@ -48,6 +45,9 @@ public class DiscussPostController implements CommunityConstant {
 
     @Autowired
     private CommonMethod commonMethod;
+
+    @Autowired
+    private MessageService messageService;
 
     /**
      * 将帖子表中的信息按照默认或者规定的分页，展示出去。

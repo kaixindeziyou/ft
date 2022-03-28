@@ -3,6 +3,7 @@ package com.zrulin.ftcommunity.config;
 import com.zrulin.ftcommunity.contorller.interceptor.DemoInterceptor;
 import com.zrulin.ftcommunity.contorller.interceptor.LoginInterceptor;
 import com.zrulin.ftcommunity.contorller.interceptor.LoginRequireInterceptor;
+import com.zrulin.ftcommunity.contorller.interceptor.MessageInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -24,6 +25,9 @@ public class WebConfig implements WebMvcConfigurer {
     @Autowired
     private LoginRequireInterceptor loginRequireInterceptor;
 
+    @Autowired
+    private MessageInterceptor messageInterceptor;
+
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         //添加拦截器，如果不做配置的话就会拦截一切请求
@@ -39,6 +43,9 @@ public class WebConfig implements WebMvcConfigurer {
                 .excludePathPatterns("/**/*.css","/**/*.js","/**/*.png","/**/*.jpg","/**/*.jpeg");
 
         registry.addInterceptor(loginRequireInterceptor)
+                .excludePathPatterns("/**/*.css","/**/*.js","/**/*.png","/**/*.jpg","/**/*.jpeg");
+
+        registry.addInterceptor(messageInterceptor)
                 .excludePathPatterns("/**/*.css","/**/*.js","/**/*.png","/**/*.jpg","/**/*.jpeg");
     }
 }
