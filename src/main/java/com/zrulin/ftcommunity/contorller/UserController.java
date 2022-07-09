@@ -113,7 +113,7 @@ public class UserController implements CommunityConstant {
      * @param filename
      * @param response
      */
-    @LoginRequired
+
     @GetMapping("/header/{filename}")
     public void getHeader(@PathVariable("filename") String filename,
                           HttpServletResponse response){

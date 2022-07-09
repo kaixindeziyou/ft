@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <contextName>FTCommunity</contextName>
-    <property name="LOG_PATH" value="D:/work/data"/>
+    <property name="LOG_PATH" value="/home/zrulin/project/FTCommunity/data"/>
     <property name="APPDIR" value="FTCommunity"/>
 
     <!-- error file -->

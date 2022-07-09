@@ -17,6 +17,11 @@ import java.util.Date;
 public class TeamTest {
     @Autowired
     private TeamMapper teamMapper;
+
+    @Test
+    public void test10(){
+        System.out.println(teamMapper);
+    }
     @Test
     public void test(){
         for (Team selectTeam : teamMapper.selectTeams(0, 3)) {

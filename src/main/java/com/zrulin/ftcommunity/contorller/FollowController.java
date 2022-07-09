@@ -1,9 +1,7 @@
 package com.zrulin.ftcommunity.contorller;
 
-import com.sun.jmx.snmp.daemon.CommunicatorServerMBean;
-import com.sun.org.apache.xpath.internal.operations.Mod;
 import com.zrulin.ftcommunity.annotation.LoginRequired;
-import com.zrulin.ftcommunity.event.EventProduce;
+import com.zrulin.ftcommunity.config.event.EventProduce;
 import com.zrulin.ftcommunity.pojo.Event;
 import com.zrulin.ftcommunity.pojo.Page;
 import com.zrulin.ftcommunity.pojo.User;

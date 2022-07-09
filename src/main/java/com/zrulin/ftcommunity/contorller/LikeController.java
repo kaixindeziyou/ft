@@ -1,7 +1,7 @@
 package com.zrulin.ftcommunity.contorller;
 
 import com.zrulin.ftcommunity.annotation.LoginRequired;
-import com.zrulin.ftcommunity.event.EventProduce;
+import com.zrulin.ftcommunity.config.event.EventProduce;
 import com.zrulin.ftcommunity.pojo.Event;
 import com.zrulin.ftcommunity.service.LikeServer;
 import com.zrulin.ftcommunity.util.CommunityConstant;

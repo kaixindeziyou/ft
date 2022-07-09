@@ -1,7 +1,6 @@
 package com.zrulin.ftcommunity.pojo;
 
 import lombok.Data;
-import lombok.ToString;
 
 import java.util.Date;
 

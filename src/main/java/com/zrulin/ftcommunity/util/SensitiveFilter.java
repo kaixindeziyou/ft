@@ -22,10 +22,12 @@ import java.util.TreeSet;
 @Component
 public class SensitiveFilter {
 
+    //记录日志
     private static final Logger logger = LoggerFactory.getLogger(SensitiveFilter.class);
 
+    //用来替代敏感词
     private static final String REPLACEMENT = "**";
-    //根节点
+    //前缀树的根节点
     private static final TrieNode rootNode = new TrieNode();
 
     // @PostConstruct 表明这是一个初始化方法，在类被实例化的时候就执行。

@@ -199,7 +199,7 @@ public class MessageController implements CommunityConstant {
             int followNoticeCount = messageService.findNoticeCount(user.getId(), TOPIC_FOLLOW);
             int followNoticeUnread = messageService.findNoticeUnreadCount(user.getId(), TOPIC_FOLLOW);
             messageVo.put("count",followNoticeCount);
-            messageVo.put("unreadCount",followNoticeCount);
+            messageVo.put("unreadCount",followNoticeUnread);
         }
         model.addAttribute("followNotice",messageVo);
 
