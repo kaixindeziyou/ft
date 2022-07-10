@@ -56,7 +56,16 @@ public class CommentController implements CommunityConstant {
         comment.setCreateTime(new Date());
         commentService.addComment(comment);
         //触发系统通知
-        eventStart(comment,discussPostId,hostHolder.getUser().getId());
+        eventStart(comment,discussPostId);
+        if(comment.getEntityType() == ENTITY_TYPE_POST){
+            Event event = new Event()
+                    .setTopic(TOPIC_PUBLISH)
+                    .setUserId(comment.getUserId())
+                    .setEntityType(ENTITY_TYPE_POST)
+                    .setEntityId(discussPostId);
+            eventProduce.fireEvent(event);
+        }
+
         return "redirect:/discuss/detail/" + discussPostId;
     }
     //活动评论
@@ -70,15 +79,15 @@ public class CommentController implements CommunityConstant {
         comment.setStatus(0);
         comment.setCreateTime(new Date());
         commentService.addComment(comment);
-        eventStart(comment,activityId,hostHolder.getUser().getId());
+        eventStart(comment,activityId);
         return "redirect:/activity/detail/" + activityId;
     }
 
-    private void eventStart(Comment comment, int id,int userId){
+    private void eventStart(Comment comment, int id){
         //触发系统通知
         Event event = new Event();
         event.setTopic(TOPIC_COMMENT)
-                .setUserId(userId)
+                .setUserId(comment.getUserId())
                 .setEntityUserId(comment.getEntityId())
                 .setEntityType(comment.getEntityType());
         if(comment.getEntityType() == ENTITY_TYPE_POST){

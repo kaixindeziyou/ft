@@ -7,8 +7,6 @@ import com.zrulin.ftcommunity.pojo.Page;
 import com.zrulin.ftcommunity.pojo.User;
 import com.zrulin.ftcommunity.service.ActivityService;
 import com.zrulin.ftcommunity.service.CommentService;
-import com.zrulin.ftcommunity.service.LikeServer;
-import com.zrulin.ftcommunity.service.UserService;
 import com.zrulin.ftcommunity.util.CommonMethod;
 import com.zrulin.ftcommunity.util.CommunityConstant;
 import com.zrulin.ftcommunity.util.CommunityUtil;

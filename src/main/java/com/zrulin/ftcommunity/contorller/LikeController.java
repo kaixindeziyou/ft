@@ -3,7 +3,7 @@ package com.zrulin.ftcommunity.contorller;
 import com.zrulin.ftcommunity.annotation.LoginRequired;
 import com.zrulin.ftcommunity.config.event.EventProduce;
 import com.zrulin.ftcommunity.pojo.Event;
-import com.zrulin.ftcommunity.service.LikeServer;
+import com.zrulin.ftcommunity.service.LikeService;
 import com.zrulin.ftcommunity.util.CommunityConstant;
 import com.zrulin.ftcommunity.util.CommunityUtil;
 import com.zrulin.ftcommunity.util.HostHolder;
@@ -22,7 +22,7 @@ import java.util.Map;
 @RequestMapping("/like")
 public class LikeController implements CommunityConstant {
     @Autowired
-    private LikeServer likeServer;
+    private LikeService likeServer;
 
     @Autowired
     private HostHolder hostHolder;

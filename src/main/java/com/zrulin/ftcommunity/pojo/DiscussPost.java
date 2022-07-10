@@ -1,6 +1,8 @@
 package com.zrulin.ftcommunity.pojo;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -14,6 +16,8 @@ import java.util.Date;
  * @create 2022-03-09 16:56
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Document(indexName = "discusspost", shards = 1, replicas = 1)//索引名，类型×，分片，副本。
 public class DiscussPost {
     //实体当中的属性和索引中的字段做一个映射。
@@ -42,19 +46,4 @@ public class DiscussPost {
     private int commentCount;
     @Field(type = FieldType.Double)
     private Double score;
-
-    public DiscussPost() {
-    }
-
-    public DiscussPost(Integer id, Integer userId, String title, String content, int type, int status, Date createTime, int commentCount, Double score) {
-        this.id = id;
-        this.userId = userId;
-        this.title = title;
-        this.content = content;
-        this.type = type;
-        this.status = status;
-        this.createTime = createTime;
-        this.commentCount = commentCount;
-        this.score = score;
-    }
 }

@@ -4,7 +4,7 @@ package com.zrulin.ftcommunity.service;
  * @author zrulin
  * @create 2022-03-22 17:09
  */
-public interface LikeServer {
+public interface LikeService {
 
     /**
      * 点赞

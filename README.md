@@ -1629,3 +1629,130 @@ public  void testTransaction(){
 
 spring整合的es所提供的这项技术他的底层在访问es服务器的时候，他会自动的将实体数据和es服务器里边的索引进行映射。 
 
+
+
+连接es服务器：
+
+```java
+@Configuration
+public class RestClientConfig  extends AbstractElasticsearchConfiguration {
+    @Value("${elasticsearch.host}")
+    private String host;
+
+    @Value("${elasticsearch.port}")
+    private String port;
+
+    @Override
+    @Bean
+    public RestHighLevelClient elasticsearchClient() {
+        final ClientConfiguration clientConfiguration = ClientConfiguration.builder()
+                .connectedTo(host+":"+port)
+                .build();
+        return RestClients.create(clientConfiguration).rest();
+    }
+}
+```
+
+实体类映射索引：
+
+```java
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Document(indexName = "discusspost", shards = 1, replicas = 1)//索引名，类型×，分片，副本。
+public class DiscussPost {
+    //实体当中的属性和索引中的字段做一个映射。
+    @Id
+    private Integer id;
+    //显示的时候肯定不会显示userId，肯定会显示名称，两种办法：
+    //第一种是在写sql语句的时候关联，查询用户，然后去处理，把用户的数据一起查到
+    //第二种方式是，得到这个数据以后单独的根据这个数据（DiscussPost），单独的查一下user，然后把查到的user和这个DiscussPost组合在一起返回给页面。
+    //采用后者，因为这样的方式看起来好像麻烦点，但是将来使用Redis去缓存一些数据的时候比较方便，到那个时候性能高，代码看起来也直观。
+    @Field(type = FieldType.Integer)
+    private Integer userId;
+    //搜帖子主要就是搜这个标题和内容中间的 关键字
+    //分词，存的时候把一句话拆分成更多的字条，增加他搜索的范围，用一个范围非常大的分词器:ik_max_word
+    //搜索的时候没必要拆的这么细，用聪明的方式拆出你意思的方式做拆分，拆分的稍微粗一点：ik_smart
+    @Field(type = FieldType.Text, analyzer = "ik_max_word", searchAnalyzer = "ik_smart") //存储时的解析器和搜索时的解析器。
+    private String title;
+    @Field(type = FieldType.Text, analyzer = "ik_max_word", searchAnalyzer = "ik_smart")
+    private String content;
+    @Field(type = FieldType.Integer)
+    private int type;
+    @Field(type = FieldType.Integer)
+    private int status;
+    @Field(type = FieldType.Date)
+    private Date createTime;
+    @Field(type = FieldType.Integer)
+    private int commentCount;
+    @Field(type = FieldType.Double)
+    private Double score;
+}
+```
+
+访问es数据库：
+
+```java
+/**
+ * 数据访问层的代码,es可以看作是一个特殊的数据库
+ * @author zrulin
+ * @create 2022-07-08 17:27
+ */
+@Repository //Repository是spring针对数据访问层的注解<实体类类型，实体类中的主键类型>
+public interface DiscussPostRepository extends ElasticsearchRepository<DiscussPost, Integer> {
+
+}
+```
+
+查看官方文档：[spring-data-elasticsearch](https://docs.spring.io/spring-data/elasticsearch/docs/4.3.5/reference/html/#repositories.core-concepts)
+
+借鉴文档：[springboot整合elasticsearch](https://blog.csdn.net/xiaozhang_man/article/details/125033589?spm=1001.2014.3001.5506)
+
+借鉴上面两个文档对es服务器进行增删改查。
+
+
+
+## elasticsearch社区搜索功能
+
+- 搜索服务
+  - 将贴子保存至Elasticsearch服务器
+  - 从elasticsearch服务器删除帖子
+  - 从elasticsearch服务器搜索帖子
+- 发布事件
+  - 发布帖子时，将帖子异步的提交到Elasticsearch服务器
+  - 增加评论时，将贴子异步的提交到Elasticsearch服务器
+  - 在消费组件中增加一个方法，消费帖子发布事件
+- 显示结果
+  - 在控制器中处理搜索请求，在HTML上显示搜索结果。
+
+在新增帖子或者增加评论的时候增加事件，利用kafka异步消息通知发送：
+
+```java
+//触发发帖事件
+Event event = new Event()
+        .setTopic(TOPIC_PUBLISH)
+        .setUserId(user.getId())
+        .setEntityType(ENTITY_TYPE_POST)
+        .setEntityId(post.getId());
+eventProduce.fireEvent(event);
+```
+
+构建消费者消费事件：
+
+```java
+@KafkaListener(topics = {TOPIC_PUBLISH})
+public void handlePublishMessage(ConsumerRecord record){
+    if(record == null || record.value() == null){
+        logger.error("订阅的消息内容为空");
+        return;
+    }
+    Event event = JSONObject.parseObject(record.value().toString(), Event.class);
+    if(event == null){
+        logger.error("订阅的消息格式错误！");
+        return;
+    }
+
+    DiscussPost post = discussPostService.findPostDetail(event.getEntityId());
+    elasticsearchService.saveDiscussPost(post);
+}
+```

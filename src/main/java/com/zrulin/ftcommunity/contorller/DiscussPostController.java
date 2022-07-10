@@ -1,9 +1,7 @@
 package com.zrulin.ftcommunity.contorller;
 
-import com.zrulin.ftcommunity.pojo.Comment;
-import com.zrulin.ftcommunity.pojo.DiscussPost;
-import com.zrulin.ftcommunity.pojo.Page;
-import com.zrulin.ftcommunity.pojo.User;
+import com.zrulin.ftcommunity.config.event.EventProduce;
+import com.zrulin.ftcommunity.pojo.*;
 import com.zrulin.ftcommunity.service.*;
 import com.zrulin.ftcommunity.util.CommonMethod;
 import com.zrulin.ftcommunity.util.CommunityConstant;
@@ -41,13 +39,16 @@ public class DiscussPostController implements CommunityConstant {
     private CommentService commentService;
 
     @Autowired
-    private LikeServer likeServer;
+    private LikeService likeServer;
 
     @Autowired
     private CommonMethod commonMethod;
 
     @Autowired
     private MessageService messageService;
+
+    @Autowired
+    private EventProduce eventProduce;
 
     /**
      * 将帖子表中的信息按照默认或者规定的分页，展示出去。
@@ -108,6 +109,13 @@ public class DiscussPostController implements CommunityConstant {
         }
         DiscussPost post = new DiscussPost(null, user.getId(), title, content, 0, 0, new Date(), 0, 0.0);
         discussPostService.addDiscussPost(post);
+        //触发发帖事件
+        Event event = new Event()
+                .setTopic(TOPIC_PUBLISH)
+                .setUserId(user.getId())
+                .setEntityType(ENTITY_TYPE_POST)
+                .setEntityId(post.getId());
+        eventProduce.fireEvent(event);
         return CommunityUtil.getJsonString(200,"发布成功");
     }
 

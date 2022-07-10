@@ -1,6 +1,6 @@
 package com.zrulin.ftcommunity.service.impl;
 
-import com.zrulin.ftcommunity.service.LikeServer;
+import com.zrulin.ftcommunity.service.LikeService;
 import com.zrulin.ftcommunity.util.RedisKeyUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
  * @create 2022-03-22 17:11
  */
 @Service
-public class LikeServiceImpl implements LikeServer {
+public class LikeServiceImpl implements LikeService {
 
     @Autowired
     private RedisTemplate redisTemplate;

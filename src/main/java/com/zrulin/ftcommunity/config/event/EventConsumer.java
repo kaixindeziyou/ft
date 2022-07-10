@@ -1,8 +1,12 @@
 package com.zrulin.ftcommunity.config.event;
 
 import com.alibaba.fastjson.JSONObject;
+import com.zrulin.ftcommunity.dao.elasticsearch.DiscussPostRepository;
+import com.zrulin.ftcommunity.pojo.DiscussPost;
 import com.zrulin.ftcommunity.pojo.Event;
 import com.zrulin.ftcommunity.pojo.Message;
+import com.zrulin.ftcommunity.service.DiscussPostService;
+import com.zrulin.ftcommunity.service.ElasticsearchService;
 import com.zrulin.ftcommunity.service.MessageService;
 import com.zrulin.ftcommunity.util.CommunityConstant;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -27,6 +31,12 @@ public class EventConsumer implements CommunityConstant {
 
     @Autowired
     private MessageService messageService;
+
+    @Autowired
+    private DiscussPostService discussPostService;
+
+    @Autowired
+    private ElasticsearchService elasticsearchService;
 
     @KafkaListener(topics = {TOPIC_Like,TOPIC_COMMENT,TOPIC_FOLLOW})
     public void handelCommentMessage(ConsumerRecord record){
@@ -60,5 +70,21 @@ public class EventConsumer implements CommunityConstant {
         }
         message.setContent(JSONObject.toJSONString(content));
         messageService.addMessage(message);
+    }
+
+    @KafkaListener(topics = {TOPIC_PUBLISH})
+    public void handlePublishMessage(ConsumerRecord record){
+        if(record == null || record.value() == null){
+            logger.error("订阅的消息内容为空");
+            return;
+        }
+        Event event = JSONObject.parseObject(record.value().toString(), Event.class);
+        if(event == null){
+            logger.error("订阅的消息格式错误！");
+            return;
+        }
+
+        DiscussPost post = discussPostService.findPostDetail(event.getEntityId());
+        elasticsearchService.saveDiscussPost(post);
     }
 }

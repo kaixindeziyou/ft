@@ -1,13 +1,7 @@
 package com.zrulin.ftcommunity.util;
 
 import com.alibaba.fastjson.JSONObject;
-import com.zrulin.ftcommunity.pojo.Comment;
-import com.zrulin.ftcommunity.pojo.User;
-import com.zrulin.ftcommunity.service.CommentService;
-import com.zrulin.ftcommunity.service.LikeServer;
-import com.zrulin.ftcommunity.service.UserService;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.DigestUtils;
 
 import java.util.*;

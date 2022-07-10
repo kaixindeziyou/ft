@@ -3,10 +3,8 @@ package com.zrulin.ftcommunity.util;
 import com.zrulin.ftcommunity.pojo.Comment;
 import com.zrulin.ftcommunity.pojo.User;
 import com.zrulin.ftcommunity.service.CommentService;
-import com.zrulin.ftcommunity.service.LikeServer;
+import com.zrulin.ftcommunity.service.LikeService;
 import com.zrulin.ftcommunity.service.UserService;
-import com.zrulin.ftcommunity.util.CommunityConstant;
-import org.aspectj.lang.annotation.AfterReturning;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -25,7 +23,7 @@ public class CommonMethod implements CommunityConstant {
     private UserService userService;
 
     @Autowired
-    private LikeServer likeServer;
+    private LikeService likeServer;
 
     @Autowired
     private CommentService commentService;

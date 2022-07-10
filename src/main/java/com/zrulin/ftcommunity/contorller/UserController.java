@@ -3,7 +3,7 @@ package com.zrulin.ftcommunity.contorller;
 import com.zrulin.ftcommunity.annotation.LoginRequired;
 import com.zrulin.ftcommunity.pojo.User;
 import com.zrulin.ftcommunity.service.FollowService;
-import com.zrulin.ftcommunity.service.LikeServer;
+import com.zrulin.ftcommunity.service.LikeService;
 import com.zrulin.ftcommunity.service.impl.UserServiceImpl;
 import com.zrulin.ftcommunity.util.CommunityConstant;
 import com.zrulin.ftcommunity.util.CommunityUtil;
@@ -53,7 +53,7 @@ public class UserController implements CommunityConstant {
     private HostHolder hostHolder;
 
     @Autowired
-    private LikeServer likeServer;
+    private LikeService likeServer;
 
     @Autowired
     private FollowService followService;
